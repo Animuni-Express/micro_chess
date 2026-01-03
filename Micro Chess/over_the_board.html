@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#2c7a4f">
+    <meta name="theme-color" content="#22c55e">
     <title>Micro Chess | Over The Board</title>
-    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQ2hlc3MgR2FtZSIsInNob3J0X25hbWUiOiJDaGVzcyIsInN0YXJ0X3VybCI6Ii8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMmM3YTRmIiwidGhlbWVfY29sb3IiOiIjMmM3YTRmIn0=">
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQ2hlc3MgR2FtZSIsInNob3J0X25hbWUiOiJDaGVzcyIsInN0YXJ0X3VybCI6Ii8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMjJjNTVlIiwidGhlbWVfY29sb3IiOiIjMjJjNTVlIn0=">
     <style>
         /* ========== ROOT VARIABLES ========== */
         :root {
-            --primary: #2c7a4f;
+            --primary: #22c55e;
+            --primary-dark: #16a34a;
             --light-sq: #f0d9b5;
             --dark-sq: #b58863;
             --white: #ffffff;
@@ -27,12 +28,38 @@
         /* ========== BODY STYLES ========== */
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, var(--primary) 0%, #1e5637 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 12px;
+        }
+
+        /* ========== BACK BUTTON ========== */
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: var(--white);
+            color: var(--primary);
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .back-button:hover {
+            background: var(--primary);
+            color: var(--white);
+            transform: translateX(-4px);
         }
 
         /* ========== CONTAINER STYLES ========== */
@@ -115,7 +142,7 @@
         }
 
         .square.valid-move {
-            box-shadow: inset 0 0 0 3px rgba(76, 175, 80, 0.7);
+            box-shadow: inset 0 0 0 3px rgba(34, 197, 94, 0.7);
         }
 
         .square:hover {
@@ -251,7 +278,7 @@
         }
 
         .game-over-btn:hover {
-            background: #1e5637;
+            background: var(--primary-dark);
             transform: translateY(-2px);
         }
 
@@ -279,7 +306,7 @@
         }
 
         .btn-primary:hover {
-            background: #1e5637;
+            background: var(--primary-dark);
         }
 
         .btn-secondary {
@@ -346,13 +373,22 @@
             .game-over-dialog p {
                 font-size: 16px;
             }
+            .back-button {
+                top: 10px;
+                left: 10px;
+                padding: 8px 16px;
+                font-size: 12px;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- ========== BACK BUTTON ========== -->
+    <a href="index.html" class="back-button">← Home</a>
+
     <!-- ========== OFFLINE INDICATOR ========== -->
     <div class="offline-badge" id="offlineBadge">✓ Offline Ready</div>
-    
+
     <!-- ========== GAME OVER ALERT ========== -->
     <div class="game-over-overlay" id="gameOverOverlay">
         <div class="game-over-dialog">
@@ -362,7 +398,7 @@
             <button class="game-over-btn" id="newGameFromAlert">New Game</button>
         </div>
     </div>
-    
+
     <!-- ========== MAIN CONTAINER ========== -->
     <div class="container">
         <!-- ========== HEADER SECTION ========== -->
@@ -376,7 +412,7 @@
         <!-- ========== BOARD SECTION ========== -->
         <div class="board-container">
             <div class="board" id="board"></div>
-            
+
             <!-- ========== PROMOTION MODAL ========== -->
             <div class="promotion-overlay" id="promotionOverlay">
                 <div class="promotion-dialog">
@@ -401,7 +437,7 @@
         if ('serviceWorker' in navigator) {
             const swCode = `
                 const CACHE_NAME = 'chess-offline-v1';
-                
+
                 self.addEventListener('install', (event) => {
                     self.skipWaiting();
                     event.waitUntil(
@@ -433,10 +469,10 @@
                     );
                 });
             `;
-            
+
             const blob = new Blob([swCode], { type: 'application/javascript' });
             const swUrl = URL.createObjectURL(blob);
-            
+
             navigator.serviceWorker.register(swUrl).then(() => {
                 console.log('✓ Service Worker registered - App works offline!');
                 setTimeout(() => {
@@ -460,7 +496,7 @@
         let game = new Chess();
         let selectedSquare = null;
         let validMoves = [];
-        let pendingPromotion = null; // Stores {from, to} for promotion moves
+        let pendingPromotion = null;
 
         // ========== PIECE UNICODE MAPPING ==========
         const pieces = {
@@ -472,55 +508,52 @@
         function renderBoard() {
             const board = document.getElementById('board');
             board.innerHTML = '';
-            
+
             const position = game.board();
-            
+
             for (let row = 0; row < 8; row++) {
                 for (let col = 0; col < 8; col++) {
                     const square = String.fromCharCode(97 + col) + (8 - row);
                     const piece = position[row][col];
-                    
+
                     const squareEl = document.createElement('div');
                     squareEl.className = 'square ' + ((row + col) % 2 === 0 ? 'light' : 'dark');
                     squareEl.dataset.square = square;
-                    
+
                     if (piece) {
                         squareEl.textContent = pieces[piece.color + piece.type];
                     }
-                    
+
                     squareEl.addEventListener('click', () => handleSquareClick(square));
                     board.appendChild(squareEl);
                 }
             }
-            
+
             updateStatus();
         }
 
-        // ========== SQUARE CLICK HANDLER (IMPROVED) ==========
+        // ========== SQUARE CLICK HANDLER ==========
         function handleSquareClick(square) {
+            // Prevent moves if game is over
+            if (game.isGameOver()) return;
+
             const clickedPiece = game.get(square);
-            
+
             if (selectedSquare === null) {
-                // No piece selected yet - select if it's your piece
                 if (clickedPiece && clickedPiece.color === game.turn()) {
                     selectedSquare = square;
                     validMoves = game.moves({ square, verbose: true });
                     highlightSquares();
                 }
             } else {
-                // Already have a piece selected
-                
-                // If clicking on another piece of the same color, switch selection
                 if (clickedPiece && clickedPiece.color === game.turn()) {
                     selectedSquare = square;
                     validMoves = game.moves({ square, verbose: true });
                     highlightSquares();
                 } 
-                // If clicking on the same square, deselect
                 else if (square === selectedSquare) {
                     clearSelection();
                 } 
-                // Otherwise, try to make a move
                 else {
                     makeMove(selectedSquare, square);
                 }
@@ -529,18 +562,15 @@
 
         // ========== MOVE EXECUTION FUNCTION ==========
         function makeMove(from, to) {
-            // Check if this is a pawn promotion move
             const piece = game.get(from);
             const toRank = to[1];
-            
+
             if (piece && piece.type === 'p' && (toRank === '8' || toRank === '1')) {
-                // This is a promotion move - show promotion dialog
                 pendingPromotion = { from, to };
                 showPromotionDialog(piece.color);
             } else {
-                // Regular move
                 const move = game.move({ from, to });
-                
+
                 if (move) {
                     clearSelection();
                     renderBoard();
@@ -555,9 +585,9 @@
             const overlay = document.getElementById('promotionOverlay');
             const choices = document.getElementById('promotionChoices');
             choices.innerHTML = '';
-            
+
             const promotionPieces = ['q', 'r', 'b', 'n'];
-            
+
             promotionPieces.forEach(pieceType => {
                 const pieceBtn = document.createElement('div');
                 pieceBtn.className = 'promotion-piece';
@@ -567,20 +597,20 @@
                 });
                 choices.appendChild(pieceBtn);
             });
-            
+
             overlay.classList.add('show');
         }
 
         // ========== PROMOTION EXECUTION ==========
         function executePromotion(pieceType) {
             if (!pendingPromotion) return;
-            
+
             const move = game.move({
                 from: pendingPromotion.from,
                 to: pendingPromotion.to,
                 promotion: pieceType
             });
-            
+
             if (move) {
                 clearSelection();
                 hidePromotionDialog();
@@ -620,11 +650,11 @@
         function highlightSquares() {
             document.querySelectorAll('.square').forEach(sq => {
                 sq.classList.remove('selected', 'valid-move');
-                
+
                 if (sq.dataset.square === selectedSquare) {
                     sq.classList.add('selected');
                 }
-                
+
                 if (validMoves.some(m => m.to === sq.dataset.square)) {
                     sq.classList.add('valid-move');
                 }
@@ -635,10 +665,9 @@
         function updateStatus() {
             const turn = game.turn() === 'w' ? 'White' : 'Black';
             document.getElementById('turnDisplay').textContent = turn;
-            
+
             let status = '';
-            
-            // Check for game ending conditions and show alert
+
             if (game.isCheckmate()) {
                 const winner = game.turn() === 'w' ? 'Black' : 'White';
                 status = `Checkmate! ${winner} wins!`;
@@ -654,7 +683,7 @@
             } else {
                 status = `${turn}'s turn to move`;
             }
-            
+
             document.getElementById('status').textContent = status;
         }
 
@@ -680,6 +709,10 @@
 
         // ========== UNDO BUTTON ==========
         document.getElementById('undoBtn').addEventListener('click', () => {
+            if (!game.history().length) {
+                document.getElementById('status').textContent = 'No moves to undo!';
+                return;
+            }
             game.undo();
             clearSelection();
             hidePromotionDialog();
@@ -693,3 +726,4 @@
     </script>
 </body>
 </html>
+
