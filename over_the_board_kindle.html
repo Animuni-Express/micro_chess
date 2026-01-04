@@ -109,6 +109,12 @@
             box-shadow: inset 0 0 0 3px #22c55e;
         }
 
+        /* Black piece rotation for realistic board */
+        .black-piece {
+            transform: rotate(180deg);
+            display: inline-block;
+        }
+
         .status {
             text-align: center;
             margin: 15px 0;
@@ -202,7 +208,7 @@
 </head>
 <body>
     <a href="over_the_board.html" class="back-button">← Normal Mode</a>
-    <span class="compat-badge">Kindle Optimized</span>
+    <span class="compat-badge">Kindle Compatible</span>
 
     <div class="container">
         <div class="header">
@@ -261,6 +267,10 @@
 
                     if (piece) {
                         td.textContent = pieces[piece.color + piece.type];
+                        // Rotate black pieces 180 degrees for realistic board
+                        if (piece.color === 'b') {
+                            td.classList.add('black-piece');
+                        }
                     }
 
                     td.onclick = (function(sq) {
