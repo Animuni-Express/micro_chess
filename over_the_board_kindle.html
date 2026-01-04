@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#22c55e">
+    <title>Micro Chess | Kindle Compatible</title>
+    <style>
+        /* ========== ROOT VARIABLES ========== */
+        :root {
+            --primary: #22c55e;
+            --primary-dark: #16a34a;
+            --light-sq: #f0d9b5;
+            --dark-sq: #b58863;
+            --white: #ffffff;
+            --text-dark: #1a1a1a;
+            --text-light: #666666;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 12px;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: white;
+            color: #22c55e;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s;
+            z-index: 1000;
+        }
+
+        .back-button:hover {
+            background: #22c55e;
+            color: white;
+            transform: translateX(-4px);
+        }
+
+        .compat-badge {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            background: #3b82f6;
+            color: white;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 1000;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            padding: 16px;
+            max-width: 550px;
+            width: 100%;
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #22c55e;
+            margin-bottom: 8px;
+        }
+
+        .turn-indicator {
+            font-size: 14px;
+            color: #666666;
+        }
+
+        .turn-indicator span {
+            padding: 4px 12px;
+            background: #f0e68c;
+            border-radius: 20px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .board-container {
+            width: 100%;
+            aspect-ratio: 1;
+            margin: 0 auto 16px;
+            border: 3px solid #22c55e;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            width: 100%;
+            height: 100%;
+        }
+
+        .square {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .square.light {
+            background: #f0d9b5;
+        }
+
+        .square.dark {
+            background: #b58863;
+        }
+
+        .square.selected {
+            box-shadow: inset 0 0 0 4px #ff6b6b;
+        }
+
+        .square.valid-move {
+            box-shadow: inset 0 0 0 3px rgba(34, 197, 94, 0.7);
+        }
+
+        .square:hover {
+            opacity: 0.85;
+        }
+
+        .square.black-piece {
+            transform: rotate(180deg);
+        }
+
+        .status {
+            text-align: center;
+            margin-top: 12px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #1a1a1a;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #22c55e;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #16a34a;
+        }
+
+        .btn-secondary {
+            background: #ccc;
+            color: #1a1a1a;
+        }
+
+        .btn-secondary:hover {
+            background: #b8b8b8;
+        }
+
+        .promotion-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            border-radius: 8px;
+        }
+
+        .promotion-overlay.show {
+            display: flex;
+        }
+
+        .promotion-dialog {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .promotion-dialog h3 {
+            color: #22c55e;
+            margin-bottom: 16px;
+        }
+
+        .promotion-choices {
+            display: flex;
+            gap: 12px;
+        }
+
+        .promotion-piece {
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            cursor: pointer;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+
+        .promotion-piece:hover {
+            background: #f0d9b5;
+            border-color: #22c55e;
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 8px; }
+            .container { padding: 12px; }
+            .header h1 { font-size: 22px; }
+            .square { font-size: 28px; }
+            .back-button { top: 10px; left: 10px; padding: 8px 16px; font-size: 12px; }
+            .compat-badge { top: 10px; right: 10px; font-size: 10px; padding: 6px 12px; }
+        }
+    </style>
+</head>
+<body>
+    <a href="over_the_board.html" class="back-button">← Normal Mode</a>
+    <div class="compat-badge">Kindle Compatible</div>
+
+    <div class="container">
+        <div class="header">
+            <h1>♟ Over The Board ♟</h1>
+            <div class="turn-indicator">
+                Current Turn: <span id="turnDisplay">White</span>
+            </div>
+        </div>
+
+        <div class="board-container">
+            <div class="board" id="board"></div>
+
+            <div class="promotion-overlay" id="promotionOverlay">
+                <div class="promotion-dialog">
+                    <h3>Choose Promotion</h3>
+                    <div class="promotion-choices" id="promotionChoices"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="status" id="status">Make your move</div>
+
+        <div class="controls">
+            <button class="btn btn-primary" id="newGame">New Game</button>
+            <button class="btn btn-secondary" id="undoBtn">Undo Move</button>
+        </div>
+    </div>
+
+    <!-- Load chess.js via traditional script tag (Kindle compatible) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+
+    <script>
+        // Use traditional Chess() constructor (no ES6 import)
+        var game = new Chess();
+        var selectedSquare = null;
+        var validMoves = [];
+        var pendingPromotion = null;
+
+        var pieces = {
+            'wp': '♙', 'wn': '♘', 'wb': '♗', 'wr': '♖', 'wq': '♕', 'wk': '♔',
+            'bp': '♟', 'bn': '♞', 'bb': '♝', 'br': '♜', 'bq': '♛', 'bk': '♚'
+        };
+
+        function renderBoard() {
+            var board = document.getElementById('board');
+            board.innerHTML = '';
+            var position = game.board();
+
+            for (var row = 0; row < 8; row++) {
+                for (var col = 0; col < 8; col++) {
+                    var square = String.fromCharCode(97 + col) + (8 - row);
+                    var piece = position[row][col];
+                    var squareEl = document.createElement('div');
+                    squareEl.className = 'square ' + ((row + col) % 2 === 0 ? 'light' : 'dark');
+                    squareEl.dataset.square = square;
+
+                    if (piece) {
+                        squareEl.textContent = pieces[piece.color + piece.type];
+                        if (piece.color === 'b') {
+                            squareEl.classList.add('black-piece');
+                        }
+                    }
+
+                    squareEl.addEventListener('click', (function(sq) {
+                        return function() { handleSquareClick(sq); };
+                    })(square));
+
+                    board.appendChild(squareEl);
+                }
+            }
+            updateStatus();
+        }
+
+        function handleSquareClick(square) {
+            if (game.game_over()) return;
+            var clickedPiece = game.get(square);
+
+            if (selectedSquare === null) {
+                if (clickedPiece && clickedPiece.color === game.turn()) {
+                    selectedSquare = square;
+                    validMoves = game.moves({ square: square, verbose: true });
+                    highlightSquares();
+                }
+            } else {
+                if (clickedPiece && clickedPiece.color === game.turn()) {
+                    selectedSquare = square;
+                    validMoves = game.moves({ square: square, verbose: true });
+                    highlightSquares();
+                } else if (square === selectedSquare) {
+                    clearSelection();
+                } else {
+                    makeMove(selectedSquare, square);
+                }
+            }
+        }
+
+        function makeMove(from, to) {
+            var piece = game.get(from);
+            var toRank = to[1];
+
+            if (piece && piece.type === 'p' && (toRank === '8' || toRank === '1')) {
+                pendingPromotion = { from: from, to: to };
+                showPromotionDialog(piece.color);
+            } else {
+                var move = game.move({ from: from, to: to });
+                if (move) {
+                    clearSelection();
+                    renderBoard();
+                } else {
+                    clearSelection();
+                }
+            }
+        }
+
+        function showPromotionDialog(color) {
+            var overlay = document.getElementById('promotionOverlay');
+            var choices = document.getElementById('promotionChoices');
+            choices.innerHTML = '';
+            var promotionPieces = ['q', 'r', 'b', 'n'];
+
+            for (var i = 0; i < promotionPieces.length; i++) {
+                var pieceType = promotionPieces[i];
+                var pieceBtn = document.createElement('div');
+                pieceBtn.className = 'promotion-piece';
+                pieceBtn.textContent = pieces[color + pieceType];
+                pieceBtn.addEventListener('click', (function(pt) {
+                    return function() { executePromotion(pt); };
+                })(pieceType));
+                choices.appendChild(pieceBtn);
+            }
+            overlay.classList.add('show');
+        }
+
+        function executePromotion(pieceType) {
+            if (!pendingPromotion) return;
+            var move = game.move({
+                from: pendingPromotion.from,
+                to: pendingPromotion.to,
+                promotion: pieceType
+            });
+            if (move) {
+                clearSelection();
+                hidePromotionDialog();
+                pendingPromotion = null;
+                renderBoard();
+            }
+        }
+
+        function hidePromotionDialog() {
+            document.getElementById('promotionOverlay').classList.remove('show');
+        }
+
+        function clearSelection() {
+            selectedSquare = null;
+            validMoves = [];
+            var squares = document.querySelectorAll('.square');
+            for (var i = 0; i < squares.length; i++) {
+                squares[i].classList.remove('selected', 'valid-move');
+            }
+        }
+
+        function highlightSquares() {
+            var squares = document.querySelectorAll('.square');
+            for (var i = 0; i < squares.length; i++) {
+                var sq = squares[i];
+                sq.classList.remove('selected', 'valid-move');
+                if (sq.dataset.square === selectedSquare) {
+                    sq.classList.add('selected');
+                }
+                for (var j = 0; j < validMoves.length; j++) {
+                    if (validMoves[j].to === sq.dataset.square) {
+                        sq.classList.add('valid-move');
+                    }
+                }
+            }
+        }
+
+        function updateStatus() {
+            var turn = game.turn() === 'w' ? 'White' : 'Black';
+            document.getElementById('turnDisplay').textContent = turn;
+            var status = '';
+
+            if (game.in_checkmate()) {
+                var winner = game.turn() === 'w' ? 'Black' : 'White';
+                status = 'Checkmate! ' + winner + ' wins!';
+            } else if (game.in_stalemate()) {
+                status = 'Stalemate!';
+            } else if (game.in_draw()) {
+                status = 'Game is a draw';
+            } else if (game.in_check()) {
+                status = turn + ' is in check!';
+            } else {
+                status = turn + "'s turn to move";
+            }
+            document.getElementById('status').textContent = status;
+        }
+
+        document.getElementById('newGame').addEventListener('click', function() {
+            game = new Chess();
+            clearSelection();
+            hidePromotionDialog();
+            pendingPromotion = null;
+            renderBoard();
+        });
+
+        document.getElementById('undoBtn').addEventListener('click', function() {
+            if (game.history().length === 0) {
+                document.getElementById('status').textContent = 'No moves to undo!';
+                return;
+            }
+            game.undo();
+            clearSelection();
+            hidePromotionDialog();
+            pendingPromotion = null;
+            renderBoard();
+        });
+
+        renderBoard();
+    </script>
+</body>
+</html>
