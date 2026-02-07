@@ -1,529 +1,113 @@
 <!DOCTYPE html>
+<!-- Define document type as HTML5 -->
 <html lang="en">
+<!-- Start of HTML document with English language -->
+
 <head>
+    <!-- Start of head section -->
     <meta charset="UTF-8">
+    <!-- Set character encoding to UTF-8 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Set viewport for responsive design on mobile devices -->
     <meta name="theme-color" content="#22c55e">
+    <!-- Set browser theme color (address bar color) to green -->
     <title>Micro Chess | Over The Board</title>
-    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQ2hlc3MgR2FtZSIsInNob3J0X25hbWUiOiJDaGVzcyIsInN0YXJ0X3VybCI6Ii8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMjJjNTVlIiwidGhlbWVfY29sb3IiOiIjMjJjNTVlIn0=">
-    <style>
-        /* ========== ROOT VARIABLES ========== */
-        :root {
-            --primary: #22c55e;
-            --primary-dark: #16a34a;
-            --light-sq: #f0d9b5;
-            --dark-sq: #b58863;
-            --white: #ffffff;
-            --text-dark: #1a1a1a;
-            --text-light: #666666;
-        }
-
-        /* ========== GLOBAL RESET ========== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        /* ========== BODY STYLES ========== */
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 12px;
-        }
-
-        /* ========== BACK BUTTON ========== */
-        .back-button {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            padding: 10px 20px;
-            background: var(--white);
-            color: var(--primary);
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 14px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            transition: all 0.2s;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .back-button:hover {
-            background: var(--primary);
-            color: var(--white);
-            transform: translateX(-4px);
-        }
-
-        /* ========== CONTAINER STYLES ========== */
-        .container {
-            background: var(--white);
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            padding: 16px;
-            max-width: 550px;
-            width: 100%;
-            position: relative;
-        }
-
-        /* ========== HEADER STYLES ========== */
-        .header {
-            text-align: center;
-            margin-bottom: 16px;
-        }
-
-        .header h1 {
-            font-size: 28px;
-            color: var(--primary);
-            margin-bottom: 8px;
-        }
-
-        .turn-indicator {
-            font-size: 14px;
-            color: var(--text-light);
-        }
-
-        .turn-indicator span {
-            padding: 4px 12px;
-            background: #f0e68c;
-            border-radius: 20px;
-            font-weight: 600;
-            color: var(--text-dark);
-        }
-
-        /* ========== BOARD CONTAINER STYLES ========== */
-        .board-container {
-            width: 100%;
-            aspect-ratio: 1;
-            margin: 0 auto 16px;
-            border: 3px solid var(--primary);
-            border-radius: 8px;
-            overflow: hidden;
-            box-sizing: border-box;
-            position: relative;
-        }
-
-        /* ========== BOARD GRID STYLES ========== */
-        .board {
-            display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            grid-template-rows: repeat(8, 1fr);
-            width: 100%;
-            height: 100%;
-        }
-
-        /* ========== SQUARE STYLES ========== */
-        .square {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: clamp(28px, 5.5vw, 48px);
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .square.light {
-            background: var(--light-sq);
-        }
-
-        .square.dark {
-            background: var(--dark-sq);
-        }
-
-        .square.selected {
-            box-shadow: inset 0 0 0 4px #ff6b6b;
-        }
-
-        .square.valid-move {
-            box-shadow: inset 0 0 0 3px rgba(34, 197, 94, 0.7);
-        }
-
-        .square:hover {
-            opacity: 0.85;
-        }
-
-        /* ========== BLACK PIECE ROTATION ========== */
-        .square.black-piece {
-            transform: rotate(180deg);
-        }
-
-        /* ========== PROMOTION MODAL STYLES ========== */
-        .promotion-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            border-radius: 8px;
-        }
-
-        .promotion-overlay.show {
-            display: flex;
-        }
-
-        .promotion-dialog {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            text-align: center;
-        }
-
-        .promotion-dialog h3 {
-            color: var(--primary);
-            margin-bottom: 16px;
-            font-size: 18px;
-        }
-
-        .promotion-choices {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-        }
-
-        .promotion-piece {
-            width: 70px;
-            height: 70px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 48px;
-            cursor: pointer;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            background: #f8f9fa;
-            transition: all 0.2s;
-        }
-
-        .promotion-piece:hover {
-            background: var(--light-sq);
-            border-color: var(--primary);
-            transform: scale(1.1);
-        }
-
-        /* ========== GAME OVER ALERT STYLES ========== */
-        .game-over-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-
-        .game-over-overlay.show {
-            display: flex;
-        }
-
-        .game-over-dialog {
-            background: white;
-            padding: 32px;
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-            animation: slideDown 0.3s ease-out;
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-50px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .game-over-dialog h2 {
-            color: var(--primary);
-            font-size: 32px;
-            margin-bottom: 16px;
-        }
-
-        .game-over-dialog p {
-            color: var(--text-dark);
-            font-size: 18px;
-            margin-bottom: 24px;
-        }
-
-        .game-over-dialog .result-icon {
-            font-size: 64px;
-            margin-bottom: 16px;
-        }
-
-        .game-over-btn {
-            padding: 12px 32px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .game-over-btn:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-        }
-
-        /* ========== BUTTON STYLES ========== */
-        .controls {
-            display: flex;
-            gap: 12px;
-            margin-top: 16px;
-        }
-
-        .btn {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: var(--primary-dark);
-        }
-
-        .btn-secondary {
-            background: #ccc;
-            color: var(--text-dark);
-        }
-
-        .btn-secondary:hover {
-            background: #b8b8b8;
-        }
-
-        /* ========== STATUS STYLES ========== */
-        .status {
-            text-align: center;
-            margin-top: 12px;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 6px;
-            font-size: 14px;
-            color: var(--text-dark);
-        }
-
-
-
-        /* ========== COMPATIBILITY MODE BUTTON ========== */
-        .compat-button {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            background: #3b82f6;
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 14px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            transition: all 0.2s;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .compat-button:hover {
-            background: #2563eb;
-            transform: translateY(-2px);
-        }
-
-        /* ========== OFFLINE BADGE STYLES ========== */
-        .offline-badge {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            padding: 6px 12px;
-            background: #4caf50;
-            color: white;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            display: none;
-            z-index: 1000;
-        }
-
-        .offline-badge.show {
-            display: block;
-        }
-
-        /* ========== MOBILE RESPONSIVE STYLES ========== */
-        @media (max-width: 480px) {
-            body {
-                padding: 8px;
-            }
-            .container {
-                padding: 12px;
-            }
-            .header h1 {
-                font-size: 22px;
-            }
-            .promotion-piece {
-                width: 60px;
-                height: 60px;
-                font-size: 40px;
-            }
-            .game-over-dialog {
-                padding: 24px;
-            }
-            .game-over-dialog h2 {
-                font-size: 24px;
-            }
-            .game-over-dialog p {
-                font-size: 16px;
-            }
-            .back-button {
-                top: 10px;
-                left: 10px;
-                padding: 8px 16px;
-                font-size: 12px;
-            }
-            .compat-button {
-                top: 10px;
-                right: 10px;
-                padding: 8px 16px;
-                font-size: 12px;
-            }
-        }
-    </style>
+    <!-- Set the page title -->
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>♟️</text></svg>">
+    <!-- Add a favicon using an inline SVG data URI -->
+    <link rel="manifest"
+        href="data:application/json;base64,eyJuYW1lIjoiQ2hlc3MgR2FtZSIsInNob3J0X25hbWUiOiJDaGVzcyIsInN0YXJ0X3VybCI6ImluZGV4Lmh0bWwiLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMjJjNTVlIiwidGhlbWVfY29sb3IiOiIjMjJjNTVlIn0=">
+    <!-- Link to the Web App Manifest (base64 encoded JSON) for PWA installation -->
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
+    <!-- Start of Body Content -->
+
     <!-- ========== BACK BUTTON ========== -->
     <a href="index.html" class="back-button">← Home</a>
+    <!-- Link back to the home page -->
 
     <!-- ========== COMPATIBILITY MODE BUTTON ========== -->
     <a href="over_the_board_kindle.html" class="compat-button">📱 Kindle Mode</a>
+    <!-- Link to the e-ink compatible mode -->
 
-
-    <!-- ========== OFFLINE INDICATOR ========== -->
-    <div class="offline-badge" id="offlineBadge">✓ Offline Ready</div>
 
     <!-- ========== GAME OVER ALERT ========== -->
     <div class="game-over-overlay" id="gameOverOverlay">
+        <!-- Overlay container for game over modal -->
         <div class="game-over-dialog">
+            <!-- Dialog box -->
             <div class="result-icon" id="resultIcon"></div>
+            <!-- Icon/Emoji for result -->
             <h2 id="gameOverTitle">Game Over</h2>
+            <!-- Game Over Title -->
             <p id="gameOverMessage">Result</p>
+            <!-- Detailed result message -->
             <button class="game-over-btn" id="newGameFromAlert">New Game</button>
+            <!-- Button to restart game from modal -->
         </div>
     </div>
 
     <!-- ========== MAIN CONTAINER ========== -->
     <div class="container">
+        <!-- Main content container -->
+
         <!-- ========== HEADER SECTION ========== -->
         <div class="header">
+            <!-- Header wrapper -->
             <h1>♟ Over The Board ♟</h1>
+            <!-- Main visible title -->
             <div class="turn-indicator">
+                <!-- Turn indicator wrapper -->
                 Current Turn: <span id="turnDisplay">White</span>
+                <!-- Text showing whose turn it is -->
             </div>
         </div>
 
         <!-- ========== BOARD SECTION ========== -->
         <div class="board-container">
+            <!-- Container maintaining board aspect ratio -->
             <div class="board" id="board"></div>
+            <!-- Grid container where squares/pieces will be injected -->
 
             <!-- ========== PROMOTION MODAL ========== -->
             <div class="promotion-overlay" id="promotionOverlay">
+                <!-- Overlay for promotion selection -->
                 <div class="promotion-dialog">
+                    <!-- Dialog box -->
                     <h3>Choose Promotion</h3>
+                    <!-- Instruction text -->
                     <div class="promotion-choices" id="promotionChoices"></div>
+                    <!-- Container for promotion options -->
                 </div>
             </div>
         </div>
 
         <!-- ========== STATUS SECTION ========== -->
         <div class="status" id="status">Make your move</div>
+        <!-- Status bar showing game state (check, move made, etc) -->
 
         <!-- ========== CONTROLS SECTION ========== -->
         <div class="controls">
+            <!-- Button controls wrapper -->
             <button class="btn btn-primary" id="newGame">New Game</button>
+            <!-- Button to start new game -->
             <button class="btn btn-secondary" id="undoBtn">Undo Move</button>
+            <!-- Button to undo last move -->
         </div>
     </div>
 
     <!-- ========== SERVICE WORKER REGISTRATION ========== -->
     <script>
-        if ('serviceWorker' in navigator) {
-            const swCode = `
-                const CACHE_NAME = 'chess-offline-v1';
-
-                self.addEventListener('install', (event) => {
-                    self.skipWaiting();
-                    event.waitUntil(
-                        caches.open(CACHE_NAME).then((cache) => {
-                            return cache.addAll([
-                                '/',
-                                'https://unpkg.com/chess.js@1.0.0-beta.8/dist/esm/chess.js'
-                            ]);
-                        })
-                    );
-                });
-
-                self.addEventListener('activate', (event) => {
-                    event.waitUntil(self.clients.claim());
-                });
-
-                self.addEventListener('fetch', (event) => {
-                    event.respondWith(
-                        caches.match(event.request).then((response) => {
-                            return response || fetch(event.request).then((fetchResponse) => {
-                                return caches.open(CACHE_NAME).then((cache) => {
-                                    cache.put(event.request, fetchResponse.clone());
-                                    return fetchResponse;
-                                });
-                            });
-                        }).catch(() => {
-                            return caches.match(event.request);
-                        })
-                    );
-                });
-            `;
-
-            const blob = new Blob([swCode], { type: 'application/javascript' });
-            const swUrl = URL.createObjectURL(blob);
-
-            navigator.serviceWorker.register(swUrl).then(() => {
-                console.log('✓ Service Worker registered - App works offline!');
-                setTimeout(() => {
-                    document.getElementById('offlineBadge').classList.add('show');
-                    setTimeout(() => {
-                        document.getElementById('offlineBadge').classList.remove('show');
-                    }, 3000);
-                }, 1000);
+        // Check if Service Worker is supported and protocol is http/https
+        if ('serviceWorker' in navigator && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
+            // Register the service worker file
+            navigator.serviceWorker.register('sw.js').then(reg => {
+                console.log('ServiceWorker registration successful with scope: ', reg.scope);
             }).catch((err) => {
+                // Log errors
                 console.log('Service Worker registration failed:', err);
             });
         }
@@ -531,75 +115,140 @@
 
     <!-- ========== CHESS GAME LOGIC ========== -->
     <script type="module">
-        // Import chess.js from unpkg CDN
+        // Start of Javascript module
+
+        // Import chess.js from unpkg CDN (ESM version)
         import { Chess } from 'https://unpkg.com/chess.js@1.0.0-beta.8/dist/esm/chess.js';
 
         // ========== GAME STATE VARIABLES ==========
         let game = new Chess();
+        // Initialize new chess game instance
         let selectedSquare = null;
+        // Track currently selected square (null if none)
         let validMoves = [];
+        // Array to store valid moves for selected piece
         let pendingPromotion = null;
+        // Store promotion details waiting for user selection
 
-        // ========== PIECE UNICODE MAPPING ==========
+        // ========== PIECE IMAGE MAPPING ==========
+        // Map internal piece codes to image URLs (Wikimedia Commons)
         const pieces = {
-            'wp': '♙', 'wn': '♘', 'wb': '♗', 'wr': '♖', 'wq': '♕', 'wk': '♔',
-            'bp': '♟', 'bn': '♞', 'bb': '♝', 'br': '♜', 'bq': '♛', 'bk': '♚'
+            'wp': 'https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_plt45.svg',
+            'wn': 'https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg',
+            'wb': 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Chess_blt45.svg',
+            'wr': 'https://upload.wikimedia.org/wikipedia/commons/7/72/Chess_rlt45.svg',
+            'wq': 'https://upload.wikimedia.org/wikipedia/commons/1/15/Chess_qlt45.svg',
+            'wk': 'https://upload.wikimedia.org/wikipedia/commons/4/42/Chess_klt45.svg',
+            'bp': 'https://upload.wikimedia.org/wikipedia/commons/c/c7/Chess_pdt45.svg',
+            'bn': 'https://upload.wikimedia.org/wikipedia/commons/e/ef/Chess_ndt45.svg',
+            'bb': 'https://upload.wikimedia.org/wikipedia/commons/9/98/Chess_bdt45.svg',
+            'br': 'https://upload.wikimedia.org/wikipedia/commons/f/ff/Chess_rdt45.svg',
+            'bq': 'https://upload.wikimedia.org/wikipedia/commons/4/47/Chess_qdt45.svg',
+            'bk': 'https://upload.wikimedia.org/wikipedia/commons/f/f0/Chess_kdt45.svg'
         };
 
         // ========== BOARD RENDERING FUNCTION ==========
         function renderBoard() {
+            // Function to draw the board and pieces
             const board = document.getElementById('board');
+            // Get board element
             board.innerHTML = '';
+            // Clear existing board
 
             const position = game.board();
+            // Get 8x8 array representing board state
 
+            // Loop through rows (0-7)
             for (let row = 0; row < 8; row++) {
+                // Loop through columns (0-7)
                 for (let col = 0; col < 8; col++) {
+                    // Calculate algebraic notation (e.g., 'a8', 'h1')
                     const square = String.fromCharCode(97 + col) + (8 - row);
+                    // Get piece object at this position
                     const piece = position[row][col];
 
+                    // Create square element
                     const squareEl = document.createElement('div');
+                    // Set class names for styling (determine light/dark square)
                     squareEl.className = 'square ' + ((row + col) % 2 === 0 ? 'light' : 'dark');
+                    // Store square ID in data attribute
                     squareEl.dataset.square = square;
 
+                    // If a piece exists on this square
                     if (piece) {
-                        squareEl.textContent = pieces[piece.color + piece.type];
-                        // Rotate black pieces 180 degrees for realistic board feel
+                        // Create image element
+                        const img = document.createElement('img');
+                        // Set image source from mappings
+                        img.src = pieces[piece.color + piece.type];
+                        // Add class if black piece (for rotation effects if enabled)
                         if (piece.color === 'b') {
                             squareEl.classList.add('black-piece');
                         }
+                        // Add image to square
+                        squareEl.appendChild(img);
                     }
 
                     squareEl.addEventListener('click', () => handleSquareClick(square));
+                    // Append square to board grid
                     board.appendChild(squareEl);
                 }
             }
 
+            // Highlight King if in check
+            if (game.isCheck()) {
+                const turn = game.turn();
+                const boardState = game.board();
+                for (let r = 0; r < 8; r++) {
+                    for (let c = 0; c < 8; c++) {
+                        const p = boardState[r][c];
+                        if (p && p.type === 'k' && p.color === turn) {
+                            const sq = String.fromCharCode(97 + c) + (8 - r);
+                            const cell = document.querySelector(`.square[data-square="${sq}"]`);
+                            if (cell) cell.classList.add('check-highlight');
+                        }
+                    }
+                }
+            }
+
+            // Update status text after rendering
             updateStatus();
         }
 
         // ========== SQUARE CLICK HANDLER ==========
         function handleSquareClick(square) {
+            // Function called when a square is clicked
+
             // Prevent moves if game is over
             if (game.isGameOver()) return;
 
+            // Get piece at clicked square
             const clickedPiece = game.get(square);
 
+            // If no square is currently selected
             if (selectedSquare === null) {
+                // If clicked a piece of current turn's color
+                if (clickedPiece && clickedPiece.color === game.turn()) {
+                    // Select it
+                    selectedSquare = square;
+                    // Calculate valid moves
+                    validMoves = game.moves({ square, verbose: true });
+                    // Highlight board
+                    highlightSquares();
+                }
+            } else {
+                // If a square IS selected...
+
+                // If clicked another piece of same color, change selection
                 if (clickedPiece && clickedPiece.color === game.turn()) {
                     selectedSquare = square;
                     validMoves = game.moves({ square, verbose: true });
                     highlightSquares();
                 }
-            } else {
-                if (clickedPiece && clickedPiece.color === game.turn()) {
-                    selectedSquare = square;
-                    validMoves = game.moves({ square, verbose: true });
-                    highlightSquares();
-                } 
+                // If clicked the same square again, deselect
                 else if (square === selectedSquare) {
                     clearSelection();
-                } 
+                }
+                // Otherwise attempt to move there
                 else {
                     makeMove(selectedSquare, square);
                 }
@@ -608,19 +257,37 @@
 
         // ========== MOVE EXECUTION FUNCTION ==========
         function makeMove(from, to) {
+            // Function to execute a move
+
+            // Get the piece moving
             const piece = game.get(from);
+            // Get rank of destination
             const toRank = to[1];
 
+            // Check for pawn promotion (Pawn reaching rank 8 or 1)
             if (piece && piece.type === 'p' && (toRank === '8' || toRank === '1')) {
+                // Store move details
                 pendingPromotion = { from, to };
+                // Show modal to choose piece
                 showPromotionDialog(piece.color);
             } else {
-                const move = game.move({ from, to });
+                // Regular move
+                try {
+                    // Attempt move in game logic
+                    const move = game.move({ from, to });
 
-                if (move) {
-                    clearSelection();
-                    renderBoard();
-                } else {
+                    // If move successful
+                    if (move) {
+                        // Deselect everything
+                        clearSelection();
+                        // Redraw board
+                        renderBoard();
+                    } else {
+                        // If move illegal, just clear selection
+                        clearSelection();
+                    }
+                } catch (e) {
+                    // Handle errors from cheese.js
                     clearSelection();
                 }
             }
@@ -628,50 +295,71 @@
 
         // ========== PROMOTION DIALOG DISPLAY ==========
         function showPromotionDialog(color) {
+            // Function to show promotion options
             const overlay = document.getElementById('promotionOverlay');
             const choices = document.getElementById('promotionChoices');
-            choices.innerHTML = '';
+            choices.innerHTML = ''; // Clear previous
 
+            // List of pieces to promote to
             const promotionPieces = ['q', 'r', 'b', 'n'];
 
+            // Create button for each choice
             promotionPieces.forEach(pieceType => {
                 const pieceBtn = document.createElement('div');
                 pieceBtn.className = 'promotion-piece';
-                pieceBtn.textContent = pieces[color + pieceType];
+                // Add image for the piece
+                const img = document.createElement('img');
+                img.src = pieces[color + pieceType];
+                pieceBtn.appendChild(img);
+
+                // Add click event for selection
                 pieceBtn.addEventListener('click', () => {
                     executePromotion(pieceType);
                 });
                 choices.appendChild(pieceBtn);
             });
 
+            // Show overlay
             overlay.classList.add('show');
         }
 
         // ========== PROMOTION EXECUTION ==========
         function executePromotion(pieceType) {
-            if (!pendingPromotion) return;
+            // Function to complete promotion move
+            if (!pendingPromotion) return; // Guard clause
 
-            const move = game.move({
-                from: pendingPromotion.from,
-                to: pendingPromotion.to,
-                promotion: pieceType
-            });
+            try {
+                // Execute move with promotion
+                const move = game.move({
+                    from: pendingPromotion.from,
+                    to: pendingPromotion.to,
+                    promotion: pieceType
+                });
 
-            if (move) {
+                // If successful
+                if (move) {
+                    clearSelection();
+                    hidePromotionDialog();
+                    pendingPromotion = null;
+                    renderBoard(); // Redraw with new piece
+                }
+            } catch (e) {
+                // Handle errors
                 clearSelection();
                 hidePromotionDialog();
                 pendingPromotion = null;
-                renderBoard();
             }
         }
 
         // ========== HIDE PROMOTION DIALOG ==========
         function hidePromotionDialog() {
+            // Helper to close modal
             document.getElementById('promotionOverlay').classList.remove('show');
         }
 
         // ========== GAME OVER ALERT FUNCTION ==========
         function showGameOverAlert(title, message, icon) {
+            // Show custom alert for game end results
             document.getElementById('gameOverTitle').textContent = title;
             document.getElementById('gameOverMessage').textContent = message;
             document.getElementById('resultIcon').textContent = icon;
@@ -680,13 +368,16 @@
 
         // ========== HIDE GAME OVER ALERT ==========
         function hideGameOverAlert() {
+            // Close game over modal
             document.getElementById('gameOverOverlay').classList.remove('show');
         }
 
         // ========== CLEAR SELECTION ==========
         function clearSelection() {
+            // Reset selection variables
             selectedSquare = null;
             validMoves = [];
+            // Remove classes from all squares
             document.querySelectorAll('.square').forEach(sq => {
                 sq.classList.remove('selected', 'valid-move');
             });
@@ -694,13 +385,17 @@
 
         // ========== HIGHLIGHT VALID MOVES ==========
         function highlightSquares() {
+            // Update visual state of squares
             document.querySelectorAll('.square').forEach(sq => {
+                // Clear old classes
                 sq.classList.remove('selected', 'valid-move');
 
+                // Highlight selected square
                 if (sq.dataset.square === selectedSquare) {
                     sq.classList.add('selected');
                 }
 
+                // Highlight valid squares for the selected piece
                 if (validMoves.some(m => m.to === sq.dataset.square)) {
                     sq.classList.add('valid-move');
                 }
@@ -709,11 +404,13 @@
 
         // ========== STATUS UPDATE FUNCTION ==========
         function updateStatus() {
+            // Update textual status
             const turn = game.turn() === 'w' ? 'White' : 'Black';
             document.getElementById('turnDisplay').textContent = turn;
 
             let status = '';
 
+            // Check various game end states
             if (game.isCheckmate()) {
                 const winner = game.turn() === 'w' ? 'Black' : 'White';
                 status = `Checkmate! ${winner} wins!`;
@@ -735,6 +432,7 @@
 
         // ========== NEW GAME BUTTON ==========
         document.getElementById('newGame').addEventListener('click', () => {
+            // Reset everything
             game = new Chess();
             clearSelection();
             hidePromotionDialog();
@@ -745,6 +443,7 @@
 
         // ========== NEW GAME FROM ALERT BUTTON ==========
         document.getElementById('newGameFromAlert').addEventListener('click', () => {
+            // Reset everything from modal button
             game = new Chess();
             clearSelection();
             hidePromotionDialog();
@@ -755,6 +454,7 @@
 
         // ========== UNDO BUTTON ==========
         document.getElementById('undoBtn').addEventListener('click', () => {
+            // Undo logic
             if (!game.history().length) {
                 document.getElementById('status').textContent = 'No moves to undo!';
                 return;
@@ -769,6 +469,25 @@
 
         // ========== INITIAL RENDER ==========
         renderBoard();
+        // Draw the board for the first time
+    </script>
+    <!-- ========== SUPABASE SDK ========== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase_client.js"></script>
+
+    <script>
+        // Verify Supabase Initialization
+        window.addEventListener('load', () => {
+            if (typeof getSupabase === 'function') {
+                const supabase = getSupabase();
+                if (supabase) {
+                    console.log('Supabase is ready on Over The Board page!');
+                }
+            } else {
+                console.error('getSupabase function not found!');
+            }
+        });
     </script>
 </body>
+
 </html>

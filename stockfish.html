@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#22c55e">
+    <title>Micro Chess | Play Stockfish</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
+    <link rel="manifest"
+        href="data:application/json;base64,eyJuYW1lIjoiQ2hlc3MgR2FtZSIsInNob3J0X25hbWUiOiJDaGVzcyIsInN0YXJ0X3VybCI6ImluZGV4Lmh0bWwiLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMjJjNTVlIiwidGhlbWVfY29sb3IiOiIjMjJjNTVlIn0=">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- ========== BACK BUTTON ========== -->
+    <a href="index.html" class="back-button">← Home</a>
+
+    <!-- ========== COMPATIBILITY MODE BUTTON ========== -->
+    <a href="stockfish_kindle.html" class="compat-button">📱 Kindle Mode</a>
+
+    <!-- ========== GAME OVER ALERT ========== -->
+    <div class="game-over-overlay" id="gameOverOverlay">
+        <div class="game-over-dialog">
+            <div class="result-icon" id="resultIcon"></div>
+            <h2 id="gameOverTitle">Game Over</h2>
+            <p id="gameOverMessage">Result</p>
+            <button class="game-over-btn" id="newGameFromAlert">New Game</button>
+        </div>
+    </div>
+
+    <!-- ========== SETUP VIEW ========== -->
+    <div class="setup-view" id="setupView">
+        <h2>Game Setup</h2>
+
+        <div class="setup-option">
+            <label>Play As:</label>
+            <div class="setup-choices">
+                <button class="choice-btn active" id="chooseWhite">White</button>
+                <button class="choice-btn" id="chooseBlack">Black</button>
+            </div>
+        </div>
+
+        <div class="setup-option">
+            <label>AI Level (Complexity): <span class="level-display" id="levelVal">10</span></label>
+            <input type="range" min="1" max="20" value="10" class="level-slider" id="levelSlider">
+        </div>
+
+        <div class="setup-option">
+            <label>AI Engine:</label>
+            <select id="engineSource"
+                style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid #ddd; font-weight: 600;">
+                <option value="local">Local Stockfish (WASM)</option>
+                <option value="chessapi" selected>Chess-API.com (Cloud)</option>
+                <option value="lichess">Lichess Cloud Eval</option>
+                <option value="supabase">Supabase AI (Cloud)</option>
+            </select>
+        </div>
+
+        <button class="start-btn" id="startGameBtn">Start Game</button>
+    </div>
+
+    <!-- ========== GAME VIEW ========== -->
+    <div class="container" id="gameView" style="display: none;">
+        <!-- ========== HEADER SECTION ========== -->
+        <div class="header">
+            <h1>🤖 Play vs Stockfish 🤖</h1>
+            <div class="turn-indicator">
+                Current Turn: <span id="turnDisplay">White</span>
+            </div>
+        </div>
+
+        <!-- ========== BOARD SECTION ========== -->
+        <div class="board-container">
+            <div class="board" id="board"></div>
+
+            <!-- ========== LOADING OVERLAY ========== -->
+            <div class="loading-overlay" id="loadingOverlay">
+                <div class="spinner"></div>
+                <p>Loading Engine...</p>
+            </div>
+
+            <!-- ========== PROMOTION MODAL ========== -->
+            <div class="promotion-overlay" id="promotionOverlay">
+                <div class="promotion-dialog">
+                    <h3>Choose Promotion</h3>
+                    <div class="promotion-choices" id="promotionChoices"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== STATUS SECTION ========== -->
+        <div class="status" id="status">Initializing Stockfish...</div>
+
+        <!-- ========== CONTROLS SECTION ========== -->
+        <div class="controls">
+            <button class="btn btn-primary" id="newGame">New Game</button>
+            <button class="btn btn-secondary" id="undoBtn">Undo Move</button>
+        </div>
+    </div>
+
+    <!-- ========== JAVASCRIPT ========== -->
+    <script>
+        if ('serviceWorker' in navigator && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
+            navigator.serviceWorker.register('sw.js').then(reg => {
+                console.log('ServiceWorker registration successful with scope: ', reg.scope);
+            }).catch(err => {
+                console.warn('ServiceWorker registration failed:', err);
+            });
+        }
+    </script>
+
+    <!-- ========== SUPABASE SDK ========== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase_client.js"></script>
+
+    <script>
+        // Verify Supabase Initialization
+        window.addEventListener('load', () => {
+            if (typeof getSupabase === 'function') {
+                const supabase = getSupabase();
+                if (supabase) {
+                    console.log('Supabase is ready on Stockfish page!');
+                }
+            } else {
+                console.error('getSupabase function not found!');
+            }
+        });
+    </script>
+
+    <script type="module">
+        import { Chess } from 'https://unpkg.com/chess.js@1.0.0-beta.8/dist/esm/chess.js';
+
+        // ========== GAME VARIABLES ==========
+        let game = new Chess();
+        let selectedSquare = null;
+        let validMoves = [];
+        let pendingPromotion = null;
+        let stockfish = null;
+        let isEngineReady = false;
+        let isEngineThinking = false;
+        let playerColor = 'w';
+        let aiLevel = 10;
+        let isGameStarted = false;
+
+        // ========== PIECE IMAGE MAPPING ==========
+        const pieces = {
+            'wp': 'https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_plt45.svg',
+            'wn': 'https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg',
+            'wb': 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Chess_blt45.svg',
+            'wr': 'https://upload.wikimedia.org/wikipedia/commons/7/72/Chess_rlt45.svg',
+            'wq': 'https://upload.wikimedia.org/wikipedia/commons/1/15/Chess_qlt45.svg',
+            'wk': 'https://upload.wikimedia.org/wikipedia/commons/4/42/Chess_klt45.svg',
+            'bp': 'https://upload.wikimedia.org/wikipedia/commons/c/c7/Chess_pdt45.svg',
+            'bn': 'https://upload.wikimedia.org/wikipedia/commons/e/ef/Chess_ndt45.svg',
+            'bb': 'https://upload.wikimedia.org/wikipedia/commons/9/98/Chess_bdt45.svg',
+            'br': 'https://upload.wikimedia.org/wikipedia/commons/f/ff/Chess_rdt45.svg',
+            'bq': 'https://upload.wikimedia.org/wikipedia/commons/4/47/Chess_qdt45.svg',
+            'bk': 'https://upload.wikimedia.org/wikipedia/commons/f/f0/Chess_kdt45.svg'
+        };
+
+        // ========== INITIALIZE STOCKFISH ==========
+        function initStockfish() {
+            setLoading(true);
+            // Use a specific version known to work well in browsers
+            const stockfishUrl = 'https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.0/stockfish.js';
+
+            // Create a worker from the CDN URL
+            // Note: This requires the worker script to be strictly CORS compliant or proxied.
+            // Since we might be offline, we rely on SW caching this URL.
+            // For now, we try standard Worker instantiation. If it fails due to CORS (common with Worker), 
+            // we might need a Blob workaround, but let's try direct first as many CDNs enable CORS.
+            try {
+                // If we are offline/local, we might need a blob workaround if CORS blocks the worker script
+                fetch(stockfishUrl)
+                    .then(response => response.text())
+                    .then(scriptContent => {
+                        const blob = new Blob([scriptContent], { type: 'application/javascript' });
+                        stockfish = new Worker(URL.createObjectURL(blob));
+                        setupStockfishListeners();
+                    })
+                    .catch(err => {
+                        console.error("Failed to load Stockfish:", err);
+                        const statusEl = document.getElementById('status');
+                        if (statusEl) statusEl.textContent = "Error loading AI. Play local PvP?";
+                        setLoading(false);
+                    });
+            } catch (e) {
+                console.error("Worker error:", e);
+            }
+        }
+
+        // ========== SETUP MENU LOGIC ==========
+        function initSetupMenu() {
+            const setupView = document.getElementById('setupView');
+            const gameView = document.getElementById('gameView');
+            const startGameBtn = document.getElementById('startGameBtn');
+            const levelSlider = document.getElementById('levelSlider');
+            const levelVal = document.getElementById('levelVal');
+            const whiteBtn = document.getElementById('chooseWhite');
+            const blackBtn = document.getElementById('chooseBlack');
+
+            levelSlider.oninput = () => {
+                aiLevel = levelSlider.value;
+                levelVal.textContent = aiLevel;
+            };
+
+            whiteBtn.onclick = () => {
+                playerColor = 'w';
+                whiteBtn.classList.add('active');
+                blackBtn.classList.remove('active');
+            };
+
+            blackBtn.onclick = () => {
+                playerColor = 'b';
+                blackBtn.classList.add('active');
+                whiteBtn.classList.remove('active');
+            };
+
+            startGameBtn.onclick = () => {
+                setupView.style.display = 'none';
+                gameView.style.display = 'block';
+                isGameStarted = true;
+                resetGame();
+            };
+        }
+
+        function setupStockfishListeners() {
+            stockfish.onmessage = function (event) {
+                const message = event.data;
+
+                if (message === 'uciok') {
+                    isEngineReady = true;
+                    setLoading(false);
+                    updateStatus();
+                } else if (message.startsWith('bestmove')) {
+                    isEngineThinking = false;
+                    const move = message.split(' ')[1];
+                    const from = move.substring(0, 2);
+                    const to = move.substring(2, 4);
+                    const promotion = move.length > 4 ? move.substring(4, 5) : undefined;
+
+                    game.move({ from, to, promotion });
+                    renderBoard();
+                    updateStatus();
+                }
+            };
+
+            stockfish.postMessage('uci');
+            stockfish.postMessage('isready');
+            stockfish.postMessage('ucinewgame');
+        }
+
+        async function makeEngineMove() {
+            if (game.isGameOver() || isEngineThinking) return;
+
+            const fen = game.fen();
+            const source = document.getElementById('engineSource').value;
+            setEngineThinking(true);
+
+            try {
+                let move;
+                if (source === 'local') {
+                    move = await getLocalStockfishMove(fen, aiLevel);
+                } else if (source === 'chessapi') {
+                    move = await getChessApiMove(fen, aiLevel);
+                } else if (source === 'lichess') {
+                    move = await getLichessMove(fen);
+                } else if (source === 'supabase') {
+                    move = await getSupabaseMove(fen);
+                }
+
+                if (move) {
+                    executeMove(move);
+                } else {
+                    console.warn(`No move returned from ${source}.`);
+                }
+            } catch (error) {
+                console.error('Engine error:', error);
+            } finally {
+                setEngineThinking(false);
+            }
+        }
+
+        async function getLocalStockfishMove(fen, level) {
+            return new Promise((resolve) => {
+                const onMsg = (event) => {
+                    const message = event.data;
+                    if (message.startsWith('bestmove')) {
+                        stockfish.removeEventListener('message', onMsg);
+                        resolve(message.split(' ')[1]);
+                    }
+                };
+                stockfish.addEventListener('message', onMsg);
+                stockfish.postMessage('position fen ' + fen);
+                // Map level 1-20 to depth 1-20
+                stockfish.postMessage(`go depth ${level}`);
+            });
+        }
+
+        async function getChessApiMove(fen, level) {
+            // Chess-API.com - Free Stockfish API
+            const response = await fetch('https://chess-api.com/v1', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                // Map level to depth for API if supported, or just keep a reasonable range
+                body: JSON.stringify({ fen, depth: Math.min(level, 15) })
+            });
+            const data = await response.json();
+            return data.move;
+        }
+
+        async function getLichessMove(fen) {
+            const response = await fetch(`https://lichess.org/api/cloud-eval?fen=${encodeURIComponent(fen)}`);
+            if (response.status === 200) {
+                const data = await response.json();
+                if (data.pvs && data.pvs.length > 0) {
+                    return data.pvs[0].moves.split(' ')[0];
+                }
+            }
+            // Fallback
+            return getChessApiMove(fen, 12);
+        }
+
+        async function getSupabaseMove(fen) {
+            if (typeof getSupabase !== 'function') return null;
+            const supabase = getSupabase();
+            if (!supabase) return null;
+
+            const { data, error } = await supabase.functions.invoke('stockfish', {
+                body: { fen, depth: 12 }
+            });
+
+            if (error) {
+                console.error("Supabase Error:", error);
+                return null;
+            }
+            return data?.bestmove;
+        }
+
+        function executeMove(move) {
+            // Parse move (e.g., "e2e4" -> from: "e2", to: "e4")
+            const from = move.substring(0, 2);
+            const to = move.substring(2, 4);
+            const promotion = move.length > 4 ? move.substring(4, 5) : undefined;
+
+            game.move({ from, to, promotion });
+            renderBoard();
+        }
+
+        function setEngineThinking(thinking) {
+            isEngineThinking = thinking;
+            updateStatus();
+        }
+
+        // ========== RENDER BOARD ==========
+        function renderBoard() {
+            if (!isGameStarted) return;
+            const board = document.getElementById('board');
+            board.innerHTML = '';
+            const position = game.board();
+
+            // Loop logic to allow flipping for Black
+            const range = playerColor === 'w'
+                ? [0, 1, 2, 3, 4, 5, 6, 7]
+                : [7, 6, 5, 4, 3, 2, 1, 0];
+
+            for (let i = 0; i < 8; i++) {
+                const row = range[i];
+                for (let j = 0; j < 8; j++) {
+                    const col = playerColor === 'w' ? j : 7 - j;
+                    const square = String.fromCharCode(97 + col) + (8 - row);
+                    const piece = position[row][col];
+                    const squareEl = document.createElement('div');
+                    squareEl.className = 'square ' + ((row + col) % 2 === 0 ? 'light' : 'dark');
+                    squareEl.dataset.square = square;
+
+                    if (piece) {
+                        const img = document.createElement('img');
+                        img.src = pieces[piece.color + piece.type];
+                        // Rotate black pieces if OTB, but here we keep them upright
+                        // Unless the user wants OTB style rotation, but usually against AI 
+                        // you want upright pieces. Let's keep them upright for now.
+                        squareEl.appendChild(img);
+                    }
+
+                    squareEl.addEventListener('click', () => handleSquareClick(square));
+                    board.appendChild(squareEl);
+                }
+            }
+
+            // Highlight King if in check
+            if (game.isCheck()) {
+                const turn = game.turn();
+                const boardState = game.board();
+                for (let r = 0; r < 8; r++) {
+                    for (let c = 0; c < 8; c++) {
+                        const p = boardState[r][c];
+                        if (p && p.type === 'k' && p.color === turn) {
+                            const sq = String.fromCharCode(97 + c) + (8 - r);
+                            const cell = document.querySelector(`.square[data-square="${sq}"]`);
+                            if (cell) cell.classList.add('check-highlight');
+                        }
+                    }
+                }
+            }
+
+            // Trigger engine if it's AI's turn and game isn't over
+            if (game.turn() !== playerColor && !game.isGameOver()) {
+                setTimeout(makeEngineMove, 500);
+            }
+            updateStatus();
+        }
+
+        // ========== SQUARE CLICK HANDLER ==========
+        function handleSquareClick(square) {
+            // Prevent moves if game over or AI is thinking or it's AI's turn
+            if (game.isGameOver() || isEngineThinking || game.turn() !== playerColor) return;
+
+            const clickedPiece = game.get(square);
+
+            if (selectedSquare === null) {
+                if (clickedPiece && clickedPiece.color === playerColor) {
+                    selectedSquare = square;
+                    validMoves = game.moves({ square, verbose: true });
+                    highlightSquares();
+                }
+            } else {
+                if (clickedPiece && clickedPiece.color === playerColor) {
+                    selectedSquare = square;
+                    validMoves = game.moves({ square, verbose: true });
+                    highlightSquares();
+                } else if (square === selectedSquare) {
+                    clearSelection();
+                } else {
+                    attemptMove(selectedSquare, square);
+                }
+            }
+        }
+
+        function attemptMove(from, to) {
+            const piece = game.get(from);
+            // Check promotion locally
+            if (piece.type === 'p' && (to[1] === '8' || to[1] === '1')) {
+                pendingPromotion = { from, to };
+                showPromotionDialog(playerColor);
+                return;
+            }
+
+            try {
+                const move = game.move({ from, to });
+                if (move) {
+                    clearSelection();
+                    renderBoard();
+                    // Engine will be triggered in renderBoard
+                } else {
+                    clearSelection();
+                }
+            } catch (e) {
+                clearSelection();
+            }
+        }
+
+        // ========== PROMOTION HANDLING ==========
+        function showPromotionDialog(color) {
+            const overlay = document.getElementById('promotionOverlay');
+            const choices = document.getElementById('promotionChoices');
+            choices.innerHTML = '';
+            ['q', 'r', 'b', 'n'].forEach(type => {
+                const btn = document.createElement('div');
+                btn.className = 'promotion-piece';
+                const img = document.createElement('img');
+                img.src = pieces[color + type];
+                btn.appendChild(img);
+                btn.onclick = () => finishPromotion(type);
+                choices.appendChild(btn);
+            });
+            overlay.classList.add('show');
+        }
+
+        function finishPromotion(type) {
+            if (!pendingPromotion) return;
+            game.move({
+                from: pendingPromotion.from,
+                to: pendingPromotion.to,
+                promotion: type
+            });
+            document.getElementById('promotionOverlay').classList.remove('show');
+            pendingPromotion = null;
+            clearSelection();
+            renderBoard();
+        }
+
+        // ========== HELPERS ==========
+        function clearSelection() {
+            selectedSquare = null;
+            validMoves = [];
+            document.querySelectorAll('.square').forEach(sq => {
+                sq.classList.remove('selected', 'valid-move');
+            });
+        }
+
+        function highlightSquares() {
+            document.querySelectorAll('.square').forEach(sq => {
+                sq.classList.remove('selected', 'valid-move');
+                if (sq.dataset.square === selectedSquare) sq.classList.add('selected');
+                if (validMoves.some(m => m.to === sq.dataset.square)) sq.classList.add('valid-move');
+            });
+        }
+
+        function updateStatus() {
+            const statusEl = document.getElementById('status');
+            if (!statusEl) return;
+
+            if (isEngineThinking) {
+                statusEl.textContent = "Stockfish is thinking...";
+                statusEl.className = "status thinking";
+                return;
+            }
+
+            statusEl.className = "status";
+            const turn = game.turn() === playerColor ? 'Your Turn' : 'Stockfish Turn';
+            document.getElementById('turnDisplay').textContent = turn;
+
+            if (game.isCheckmate()) {
+                const winner = game.turn() === playerColor ? 'Stockfish' : 'You';
+                const msg = `Checkmate! ${winner} win!`;
+                statusEl.textContent = msg;
+                showGameOverAlert(winner === 'You' ? 'Victory!' : 'Defeat', msg, winner === 'You' ? '🏆' : '💀');
+            } else if (game.isDraw()) {
+                statusEl.textContent = "Game Draw!";
+                showGameOverAlert('Draw', 'The game is drawn.', '🤝');
+            } else {
+                if (game.isCheck()) {
+                    statusEl.textContent = "Check!";
+                } else {
+                    statusEl.textContent = game.turn() === playerColor ? "Your move" : "Waiting for AI...";
+                }
+            }
+        }
+
+        function showGameOverAlert(title, message, icon) {
+            document.getElementById('gameOverTitle').textContent = title;
+            document.getElementById('gameOverMessage').textContent = message;
+            document.getElementById('resultIcon').textContent = icon;
+            document.getElementById('gameOverOverlay').classList.add('show');
+        }
+
+        document.getElementById('newGame').onclick = () => {
+            document.getElementById('gameView').style.display = 'none';
+            document.getElementById('setupView').style.display = 'block';
+        };
+        document.getElementById('newGameFromAlert').onclick = () => {
+            document.getElementById('gameOverOverlay').classList.remove('show');
+            document.getElementById('gameView').style.display = 'none';
+            document.getElementById('setupView').style.display = 'block';
+        };
+        document.getElementById('undoBtn').onclick = () => {
+            // Undo twice (AI move then Player move)
+            game.undo();
+            game.undo();
+            clearSelection();
+            renderBoard();
+        };
+
+        function resetGame() {
+            game = new Chess();
+            clearSelection();
+            renderBoard();
+            if (isEngineReady) stockfish.postMessage('ucinewgame');
+        }
+
+        // Initialize setup menu
+        initSetupMenu();
+        // Start Stockfish engine in background
+        initStockfish();
+    </script>
+</body>
+
+</html>

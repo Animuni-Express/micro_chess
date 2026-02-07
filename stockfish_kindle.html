@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Micro Chess | Stockfish (Kindle)</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
+    <link rel="stylesheet" href="style_kindle.css">
+</head>
+
+<body>
+    <a href="stockfish.html" class="back-button">← Normal Mode</a>
+    <a href="index.html" class="back-button">Home</a>
+
+    <!-- Setup View -->
+    <div class="setup-view" id="setupView">
+        <h2>Game Setup</h2>
+        <div class="setup-option">
+            <label>PLAY AS:</label>
+            <button class="choice-btn active" id="chooseWhite">WHITE</button>
+            <button class="choice-btn" id="chooseBlack">BLACK</button>
+        </div>
+        <div class="setup-option">
+            <label>AI LEVEL (1-20):</label>
+            <select class="level-select" id="levelSelect">
+                <option value="1">Level 1</option>
+                <option value="5">Level 5</option>
+                <option value="10" selected>Level 10</option>
+                <option value="15">Level 15</option>
+                <option value="20">Level 20</option>
+            </select>
+        </div>
+        <button class="start-btn" id="startGameBtn">START GAME</button>
+    </div>
+
+    <!-- Game View -->
+    <div class="container" id="gameView" style="display: none;">
+        <h1>VS Stockfish</h1>
+
+        <div class="status" id="status">Initializing...</div>
+
+        <div class="board-container">
+            <table id="board"></table>
+        </div>
+
+        <div>
+            <button class="btn" id="newGame">Setup Game</button>
+            <button class="btn" id="undoBtn">Undo</button>
+        </div>
+    </div>
+
+    <!-- Promotion Modal -->
+    <div class="promotion-overlay" id="promotionOverlay">
+        <div class="promotion-dialog">
+            <h3>PROMOTE TO:</h3>
+            <div id="promotionChoices"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script>
+        // Game Logic adapted for pure JS (no modules) and Worker
+        var game = new Chess();
+        var selectedSquare = null;
+        var validMoves = [];
+        var pendingPromotion = null;
+        var stockfish = null;
+        var isEngineReady = false;
+        var isEngineThinking = false;
+        var playerColor = 'w';
+        var aiLevel = 10;
+        var isGameStarted = false;
+
+        // Pieces (Wikimedia)
+        var pieces = {
+            'wp': 'https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_plt45.svg',
+            'wn': 'https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg',
+            'wb': 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Chess_blt45.svg',
+            'wr': 'https://upload.wikimedia.org/wikipedia/commons/7/72/Chess_rlt45.svg',
+            'wq': 'https://upload.wikimedia.org/wikipedia/commons/1/15/Chess_qlt45.svg',
+            'wk': 'https://upload.wikimedia.org/wikipedia/commons/4/42/Chess_klt45.svg',
+            'bp': 'https://upload.wikimedia.org/wikipedia/commons/c/c7/Chess_pdt45.svg',
+            'bn': 'https://upload.wikimedia.org/wikipedia/commons/e/ef/Chess_ndt45.svg',
+            'bb': 'https://upload.wikimedia.org/wikipedia/commons/9/98/Chess_bdt45.svg',
+            'br': 'https://upload.wikimedia.org/wikipedia/commons/f/ff/Chess_rdt45.svg',
+            'bq': 'https://upload.wikimedia.org/wikipedia/commons/4/47/Chess_qdt45.svg',
+            'bk': 'https://upload.wikimedia.org/wikipedia/commons/f/f0/Chess_kdt45.svg'
+        };
+
+        function initStockfish() {
+            updateStatus("Loading Engine...");
+            var stockfishUrl = 'https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.0/stockfish.js';
+
+            try {
+                fetch(stockfishUrl)
+                    .then(res => res.text())
+                    .then(txt => {
+                        var blob = new Blob([txt], { type: 'application/javascript' });
+                        stockfish = new Worker(URL.createObjectURL(blob));
+
+                        stockfish.onmessage = function (e) {
+                            var msg = e.data;
+                            if (msg === 'uciok') {
+                                isEngineReady = true;
+                                updateStatus("Engine Ready. Your Move.");
+                            } else if (msg.startsWith('bestmove')) {
+                                isEngineThinking = false;
+                                var parts = msg.split(' ');
+                                var move = parts[1];
+                                var from = move.substring(0, 2);
+                                var to = move.substring(2, 4);
+                                var promo = move.length > 4 ? move.substring(4, 5) : undefined;
+
+                                game.move({ from: from, to: to, promotion: promo });
+                                renderBoard();
+                                checkGameEnd();
+                            }
+                        };
+
+                        stockfish.postMessage('uci');
+                        stockfish.postMessage('isready');
+                    })
+                    .catch(err => {
+                        updateStatus("AI Load Failed. PvP Only.");
+                    });
+            } catch (e) {
+                updateStatus("AI Error.");
+            }
+        }
+
+        function initSetupMenu() {
+            var setupView = document.getElementById('setupView');
+            var gameView = document.getElementById('gameView');
+            var startBtn = document.getElementById('startGameBtn');
+            var whiteBtn = document.getElementById('chooseWhite');
+            var blackBtn = document.getElementById('chooseBlack');
+            var levelSelect = document.getElementById('levelSelect');
+
+            whiteBtn.onclick = function () {
+                playerColor = 'w';
+                whiteBtn.className = 'choice-btn active';
+                blackBtn.className = 'choice-btn';
+            };
+            blackBtn.onclick = function () {
+                playerColor = 'b';
+                blackBtn.className = 'choice-btn active';
+                whiteBtn.className = 'choice-btn';
+            };
+            startBtn.onclick = function () {
+                aiLevel = parseInt(levelSelect.value);
+                setupView.style.display = 'none';
+                gameView.style.display = 'block';
+                isGameStarted = true;
+                resetGame();
+            };
+        }
+
+        function makeEngineMove() {
+            if (!isEngineReady || game.game_over()) return;
+            isEngineThinking = true;
+            updateStatus("AI THINKING..."); // Explicit text for Kindle
+
+            stockfish.postMessage('position fen ' + game.fen());
+            stockfish.postMessage('go depth ' + aiLevel);
+        }
+
+        function renderBoard() {
+            if (!isGameStarted) return;
+            var board = document.getElementById('board');
+            board.innerHTML = '';
+            var position = game.board();
+
+            var range = (playerColor === 'w') ? [0, 1, 2, 3, 4, 5, 6, 7] : [7, 6, 5, 4, 3, 2, 1, 0];
+
+            for (var i = 0; i < 8; i++) {
+                var row = range[i];
+                var tr = document.createElement('tr');
+                for (var j = 0; j < 8; j++) {
+                    var col = (playerColor === 'w') ? j : 7 - j;
+                    var square = String.fromCharCode(97 + col) + (8 - row);
+                    var piece = position[row][col];
+                    var td = document.createElement('td');
+
+                    td.className = (row + col) % 2 === 0 ? 'light' : 'dark';
+                    td.setAttribute('data-square', square);
+
+                    if (piece) {
+                        var img = document.createElement('img');
+                        img.src = pieces[piece.color + piece.type];
+                        td.appendChild(img);
+                    }
+
+                    td.onclick = (function (sq) {
+                        return function () { handleSquareClick(sq); };
+                    })(square);
+
+                    tr.appendChild(td);
+                }
+                board.appendChild(tr);
+            }
+
+            // Highlight King if in check
+            if (game.in_check()) {
+                var turn = game.turn();
+                var boardState = game.board();
+                for (var r = 0; r < 8; r++) {
+                    for (var c = 0; c < 8; c++) {
+                        var p = boardState[r][c];
+                        if (p && p.type === 'k' && p.color === turn) {
+                            var sq = String.fromCharCode(97 + c) + (8 - r);
+                            var cell = document.querySelector('td[data-square="' + sq + '"]');
+                            if (cell) cell.classList.add('check-highlight');
+                        }
+                    }
+                }
+            }
+
+            if (game.turn() !== playerColor && !game.game_over()) {
+                setTimeout(makeEngineMove, 100);
+            }
+        }
+
+        function handleSquareClick(square) {
+            if (game.game_over() || isEngineThinking || game.turn() !== playerColor) return;
+
+            var clickedPiece = game.get(square);
+
+            if (selectedSquare === null) {
+                if (clickedPiece && clickedPiece.color === playerColor) {
+                    selectedSquare = square;
+                    highlightSquares();
+                }
+            } else {
+                if (clickedPiece && clickedPiece.color === playerColor) {
+                    selectedSquare = square;
+                    highlightSquares();
+                } else if (square === selectedSquare) {
+                    selectedSquare = null;
+                    highlightSquares();
+                } else {
+                    // Check promotion
+                    var piece = game.get(selectedSquare);
+                    if (piece.type === 'p' && (square[1] === '8' || square[1] === '1')) {
+                        pendingPromotion = { from: selectedSquare, to: square };
+                        showPromotionDialog();
+                    } else {
+                        var move = game.move({ from: selectedSquare, to: square });
+                        if (move) {
+                            selectedSquare = null;
+                            renderBoard();
+                            checkGameEnd();
+                        } else {
+                            selectedSquare = null;
+                            highlightSquares();
+                        }
+                    }
+                }
+            }
+        }
+
+        function showPromotionDialog() {
+            var overlay = document.getElementById('promotionOverlay');
+            var choices = document.getElementById('promotionChoices');
+            choices.innerHTML = '';
+            var types = ['q', 'r', 'b', 'n'];
+
+            types.forEach(function (t) {
+                var btn = document.createElement('div');
+                btn.className = 'promotion-piece';
+                var img = document.createElement('img');
+                img.src = pieces[playerColor + t];
+                img.style.width = '80%'; img.style.marginTop = '10%';
+                btn.appendChild(img);
+                btn.onclick = function () {
+                    game.move({ from: pendingPromotion.from, to: pendingPromotion.to, promotion: t });
+                    overlay.classList.remove('show');
+                    pendingPromotion = null;
+                    selectedSquare = null;
+                    renderBoard();
+                    checkGameEnd();
+                };
+                choices.appendChild(btn);
+            });
+            overlay.classList.add('show');
+        }
+
+        function highlightSquares() {
+            var tds = document.getElementsByTagName('td');
+            for (var i = 0; i < tds.length; i++) {
+                tds[i].classList.remove('selected');
+                if (tds[i].getAttribute('data-square') === selectedSquare) {
+                    tds[i].classList.add('selected');
+                }
+            }
+        }
+
+        function checkGameEnd() {
+            if (game.in_checkmate()) updateStatus("CHECKMATE! " + (game.turn() === playerColor ? 'AI' : 'YOU') + " WON");
+            else if (game.in_draw()) updateStatus("DRAW!");
+            else if (game.in_check()) updateStatus("CHECK!");
+            else if (!isEngineThinking) updateStatus(game.turn() === playerColor ? "Your Move" : "Waiting...");
+        }
+
+        function updateStatus(msg) {
+            document.getElementById('status').textContent = msg;
+        }
+
+        document.getElementById('newGame').onclick = function () {
+            document.getElementById('gameView').style.display = 'none';
+            document.getElementById('setupView').style.display = 'block';
+        };
+
+        function resetGame() {
+            game = new Chess();
+            selectedSquare = null;
+            if (isEngineReady) stockfish.postMessage('ucinewgame');
+            renderBoard();
+            updateStatus("New Game");
+        }
+
+        document.getElementById('undoBtn').onclick = function () {
+            game.undo(); game.undo();
+            selectedSquare = null;
+            renderBoard();
+            updateStatus("Undone");
+        };
+
+        // Initialize setup menu
+        initSetupMenu();
+
+        // Start
+        initStockfish();
+        renderBoard();
+
+        // SW
+        if ('serviceWorker' in navigator && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) navigator.serviceWorker.register('sw.js').then(reg => console.log('ServiceWorker registration successful with scope: ', reg.scope)).catch(err => console.warn('ServiceWorker registration failed:', err));
+    </script>
+</body>
+
+</html>

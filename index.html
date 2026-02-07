@@ -1,183 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#22c55e">
     <title>Micro Chess - Play Chess Online</title>
-    <style>
-        /* ========== GLOBAL RESET ========== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        /* ========== ROOT VARIABLES ========== */
-        :root {
-            --green-primary: #22c55e;
-            --green-dark: #16a34a;
-            --red-primary: #ef4444;
-            --red-dark: #dc2626;
-            --white: #ffffff;
-            --text-dark: #1a1a1a;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        /* ========== BODY STYLES ========== */
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, var(--green-primary) 0%, var(--green-dark) 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        /* ========== CONTAINER STYLES ========== */
-        .container {
-            background: var(--white);
-            max-width: 600px;
-            width: 100%;
-            border-radius: 0;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            overflow: hidden;
-        }
-
-        /* ========== HEADER STYLES ========== */
-        .header {
-            background: var(--white);
-            padding: 40px 20px;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: clamp(36px, 8vw, 64px);
-            font-weight: 700;
-            color: var(--green-primary);
-            line-height: 1.2;
-        }
-
-        /* ========== CARD STYLES ========== */
-        .card {
-            padding: 30px 40px;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            position: relative;
-        }
-
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: inset 0 0 0 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .card.green {
-            background: var(--green-primary);
-        }
-
-        .card.red {
-            background: var(--red-primary);
-        }
-
-        .card.disabled {
-            opacity: 0.95;
-            cursor: not-allowed;
-        }
-
-        .card.disabled:hover {
-            transform: none;
-            box-shadow: none;
-        }
-
-        .card h2 {
-            font-size: clamp(28px, 6vw, 42px);
-            font-weight: 800;
-            color: var(--text-dark);
-            margin-bottom: 12px;
-            line-height: 1.2;
-        }
-
-        .card p {
-            font-size: clamp(16px, 3.5vw, 20px);
-            color: var(--text-dark);
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        .card .status {
-            font-size: clamp(14px, 3vw, 18px);
-            color: var(--red-dark);
-            font-weight: 600;
-            margin-top: 8px;
-        }
-
-        .card.red .status {
-            color: var(--text-dark);
-        }
-
-        /* ========== FOOTER STYLES ========== */
-        .footer {
-            background: var(--white);
-            padding: 30px 20px;
-            text-align: center;
-        }
-
-        .footer p {
-            font-size: clamp(16px, 3.5vw, 20px);
-            color: var(--text-dark);
-            font-weight: 600;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-
-        .footer p:hover {
-            color: var(--green-primary);
-        }
-
-        /* ========== RESPONSIVE STYLES ========== */
-        @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-
-            .header {
-                padding: 30px 15px;
-            }
-
-            .card {
-                padding: 25px 20px;
-            }
-
-            .footer {
-                padding: 25px 15px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            body {
-                padding: 5px;
-            }
-
-            .header {
-                padding: 25px 15px;
-            }
-
-            .card {
-                padding: 20px 15px;
-            }
-
-            .footer {
-                padding: 20px 15px;
-            }
-        }
-    </style>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>♟️</text></svg>">
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="container">
         <!-- ========== HEADER SECTION ========== -->
         <div class="header">
             <h1>Micro Chess</h1>
+            <p class="tagline">The Ultimate Minimalist Chess Experience</p>
         </div>
 
         <!-- ========== OVER THE BOARD CARD ========== -->
@@ -188,18 +27,17 @@
         </div>
 
         <!-- ========== STOCKFISH CARD ========== -->
-        <div class="card green disabled">
+        <div class="card green" onclick="location.href='stockfish.html'">
             <h2>Play With Stockfish</h2>
             <p>Play with the Worlds Best Chess AI</p>
-            <p class="status">Still in Beta</p>
-            <p class="status">Coming Soon</p>
+            <p class="status">Beta • Offline Ready</p>
         </div>
 
-        <!-- ========== CHATGPT CARD ========== -->
+        <!-- ========== MULTIPLAYER CARD ========== -->
         <div class="card red disabled">
-            <h2>Play with ChatGPT!</h2>
-            <p>Play with The best Chatbot of 2026</p>
-            <p class="status">Coming in a long time. Please Wait</p>
+            <h2>Multiplayer</h2>
+            <p>Play with people and friends</p>
+            <p class="status">Coming Soon</p>
         </div>
 
         <!-- ========== FOOTER SECTION ========== -->
@@ -207,6 +45,10 @@
             <p onclick="location.href='about.html'">About Micro Chess by Aniket Shenoy</p>
         </div>
     </div>
+
+    <!-- ========== SUPABASE SDK ========== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase_client.js"></script>
 
     <!-- ========== JAVASCRIPT ========== -->
     <script>
@@ -217,6 +59,28 @@
                 return false;
             };
         });
+
+        // Verify Supabase Initialization
+        window.addEventListener('load', () => {
+            if (typeof getSupabase === 'function') {
+                const supabase = getSupabase();
+                if (supabase) {
+                    console.log('Supabase is ready on Home page!');
+                }
+            } else {
+                console.error('getSupabase function not found!');
+            }
+        });
+    </script>
+    <script>
+        if ('serviceWorker' in navigator && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
+            navigator.serviceWorker.register('sw.js').then(reg => {
+                console.log('ServiceWorker registration successful with scope: ', reg.scope);
+            }).catch(err => {
+                console.warn('ServiceWorker registration failed:', err);
+            });
+        }
     </script>
 </body>
+
 </html>
