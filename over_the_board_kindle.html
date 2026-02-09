@@ -20,7 +20,7 @@
 <body>
     <!-- Start of body content -->
 
-    <a href="over_the_board.html" class="back-button">← Normal Mode</a>
+    <a href="over_the_board.html" class="back-button">&larr; Normal Mode</a>
     <!-- Link back to standard mode -->
     <span class="compat-badge">Kindle Compatible</span>
     <!-- Visual indicator of current mode -->
@@ -123,17 +123,11 @@
                         var img = document.createElement('img');
                         // Create image tag
                         // Set source
+                        img.src = pieces[piece.color + piece.type];
+
                         if (piece.color === 'b') {
-                            // Use WHITE piece image for consistency, but inverted/rotated
-                            img.src = pieces['w' + piece.type];
                             img.className = 'black-piece';
-                            // Inline styles for maximum compatibility
-                            img.style.transform = 'rotate(180deg)';
-                            img.style.webkitTransform = 'rotate(180deg)';
-                            img.style.filter = 'invert(100%)';
-                            img.style.webkitFilter = 'invert(100%)';
-                        } else {
-                            img.src = pieces[piece.color + piece.type];
+                            // Inline rotation for OTB mode (180 deg)
                         }
                         td.appendChild(img);
                         // Add to cell
@@ -355,9 +349,9 @@
     <script>
         // Service Worker Registration with protocol check
         if ('serviceWorker' in navigator && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
-            navigator.serviceWorker.register('sw.js').then(reg => {
+            navigator.serviceWorker.register('sw.js').then(function (reg) {
                 console.log('ServiceWorker registration successful with scope: ', reg.scope);
-            }).catch(err => {
+            }).catch(function (err) {
                 console.warn('ServiceWorker registration failed:', err);
             });
         }

@@ -72,6 +72,8 @@
         var playerColor = 'w';
         var aiLevel = 10;
         var isGameStarted = false;
+        var fallbackEngine = false;
+        var fallbackReason = '';
 
         // Pieces (Wikimedia)
         var pieces = {
@@ -89,45 +91,73 @@
             'bk': 'https://upload.wikimedia.org/wikipedia/commons/f/f0/Chess_kdt45.svg'
         };
 
+        function setFallback(reason) {
+            fallbackEngine = true;
+            fallbackReason = reason;
+            updateStatus(reason + " - using simple built-in moves");
+        }
+
         function initStockfish() {
             updateStatus("Loading Engine...");
             var stockfishUrl = 'https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.0/stockfish.js';
 
-            try {
-                fetch(stockfishUrl)
-                    .then(res => res.text())
-                    .then(txt => {
-                        var blob = new Blob([txt], { type: 'application/javascript' });
-                        stockfish = new Worker(URL.createObjectURL(blob));
-
-                        stockfish.onmessage = function (e) {
-                            var msg = e.data;
-                            if (msg === 'uciok') {
-                                isEngineReady = true;
-                                updateStatus("Engine Ready. Your Move.");
-                            } else if (msg.startsWith('bestmove')) {
-                                isEngineThinking = false;
-                                var parts = msg.split(' ');
-                                var move = parts[1];
-                                var from = move.substring(0, 2);
-                                var to = move.substring(2, 4);
-                                var promo = move.length > 4 ? move.substring(4, 5) : undefined;
-
-                                game.move({ from: from, to: to, promotion: promo });
-                                renderBoard();
-                                checkGameEnd();
-                            }
-                        };
-
-                        stockfish.postMessage('uci');
-                        stockfish.postMessage('isready');
-                    })
-                    .catch(err => {
-                        updateStatus("AI Load Failed. PvP Only.");
-                    });
-            } catch (e) {
-                updateStatus("AI Error.");
+            if (typeof Worker === 'undefined' || typeof Blob === 'undefined') {
+                setFallback("Kindle browser does not fully support Web Workers");
+                return;
             }
+
+            try {
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', stockfishUrl, true);
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        try {
+                            var txt = xhr.responseText;
+                            var blob = new Blob([txt], { type: 'application/javascript' });
+                            stockfish = new Worker(URL.createObjectURL(blob));
+                            wireStockfish();
+                            stockfish.postMessage('uci');
+                            stockfish.postMessage('isready');
+                        } catch (err) {
+                            setFallback("Engine could not start");
+                        }
+                    } else if (xhr.readyState === 4) {
+                        setFallback("AI load failed (status " + xhr.status + ")");
+                    }
+                };
+                xhr.onerror = function () { setFallback("AI download blocked"); };
+                xhr.send();
+            } catch (e) {
+                setFallback("AI Error");
+            }
+        }
+
+        function wireStockfish() {
+            if (!stockfish) return;
+            stockfish.onmessage = function (e) {
+                var msg = e.data;
+                if (msg === 'uciok') {
+                    isEngineReady = true;
+                    updateStatus("Engine Ready. Your Move.");
+                    if (isGameStarted) {
+                        stockfish.postMessage('ucinewgame');
+                        if (game.turn() !== playerColor) {
+                            setTimeout(makeEngineMove, 100);
+                        }
+                    }
+                } else if (msg.indexOf('bestmove') === 0) {
+                    isEngineThinking = false;
+                    var parts = msg.split(' ');
+                    var move = parts[1];
+                    var from = move.substring(0, 2);
+                    var to = move.substring(2, 4);
+                    var promo = move.length > 4 ? move.substring(4, 5) : undefined;
+
+                    game.move({ from: from, to: to, promotion: promo });
+                    renderBoard();
+                    checkGameEnd();
+                }
+            };
         }
 
         function initSetupMenu() {
@@ -158,12 +188,43 @@
         }
 
         function makeEngineMove() {
-            if (!isEngineReady || game.game_over()) return;
+            if (game.game_over()) return;
+
+            if (fallbackEngine) {
+                makeFallbackMove();
+                return;
+            }
+
+            if (!isEngineReady) {
+                updateStatus("Engine still loading...");
+                // Poll until engine is ready so Black starts reliably.
+                setTimeout(makeEngineMove, 500);
+                return;
+            }
+
             isEngineThinking = true;
             updateStatus("AI THINKING..."); // Explicit text for Kindle
 
             stockfish.postMessage('position fen ' + game.fen());
             stockfish.postMessage('go depth ' + aiLevel);
+        }
+
+        function makeFallbackMove() {
+            var moves = game.moves({ verbose: true });
+            if (!moves.length) return;
+
+            // Prefer captures first to feel less random
+            moves.sort(function (a, b) {
+                var aCapture = a.flags.indexOf('c') !== -1;
+                var bCapture = b.flags.indexOf('c') !== -1;
+                if (aCapture === bCapture) return 0;
+                return aCapture ? -1 : 1;
+            });
+
+            var move = moves[0];
+            game.move(move);
+            renderBoard();
+            checkGameEnd();
         }
 
         function renderBoard() {
@@ -300,7 +361,7 @@
             if (game.in_checkmate()) updateStatus("CHECKMATE! " + (game.turn() === playerColor ? 'AI' : 'YOU') + " WON");
             else if (game.in_draw()) updateStatus("DRAW!");
             else if (game.in_check()) updateStatus("CHECK!");
-            else if (!isEngineThinking) updateStatus(game.turn() === playerColor ? "Your Move" : "Waiting...");
+            else if (!isEngineThinking) updateStatus(game.turn() === playerColor ? "Your Move" : (fallbackEngine ? "Simple AI thinking..." : "Waiting..."));
         }
 
         function updateStatus(msg) {
@@ -315,9 +376,11 @@
         function resetGame() {
             game = new Chess();
             selectedSquare = null;
-            if (isEngineReady) stockfish.postMessage('ucinewgame');
+            pendingPromotion = null;
+            isEngineThinking = false;
+            if (isEngineReady && stockfish) stockfish.postMessage('ucinewgame');
             renderBoard();
-            updateStatus("New Game");
+            updateStatus(fallbackEngine ? (fallbackReason || "Simple AI ready") : "New Game");
         }
 
         document.getElementById('undoBtn').onclick = function () {
@@ -332,10 +395,9 @@
 
         // Start
         initStockfish();
-        renderBoard();
 
         // SW
-        if ('serviceWorker' in navigator && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) navigator.serviceWorker.register('sw.js').then(reg => console.log('ServiceWorker registration successful with scope: ', reg.scope)).catch(err => console.warn('ServiceWorker registration failed:', err));
+        if ('serviceWorker' in navigator && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) navigator.serviceWorker.register('sw.js').then(function (reg) { console.log('ServiceWorker registration successful with scope: ', reg.scope); }).catch(function (err) { console.warn('ServiceWorker registration failed:', err); });
     </script>
 </body>
 

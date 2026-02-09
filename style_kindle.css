@@ -41,7 +41,7 @@ h1 {
 
 .board-container {
     width: 100%;
-    max-width: 480px;
+    max-width: 560px;
     margin: 0 auto 15px;
     border: 4px solid black;
 }
@@ -54,18 +54,21 @@ table {
 
 td {
     width: 12.5%;
-    height: 60px;
-    /* approximate */
+    height: 72px;
+    /* larger tap target for Kindle touch */
     text-align: center;
     vertical-align: middle;
     cursor: pointer;
 }
 
 td img {
-    width: 80%;
-    height: 80%;
+    width: 100%;
+    height: 100%;
+    max-width: 82px;
+    max-height: 82px;
     display: block;
     margin: 0 auto;
+    filter: grayscale(1);
 }
 
 .light {
@@ -77,16 +80,8 @@ td img {
 }
 
 .black-piece {
-    /* Class for black pieces: Rotate 180 degrees and Invert colors to match style */
-    -webkit-transform: rotate(180deg);
-    -moz-transform: rotate(180deg);
-    -ms-transform: rotate(180deg);
-    -o-transform: rotate(180deg);
+    /* Keep orientation for across-the-board view, avoid color inversion on e-ink */
     transform: rotate(180deg);
-
-    /* Invert colors to make White pieces look Black (consistent style) */
-    -webkit-filter: invert(100%);
-    filter: invert(100%);
 }
 
 .selected {
