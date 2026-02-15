@@ -1,0 +1,10 @@
+{
+    "deno.enable": true,
+    "deno.enablePaths": [
+        "supabase/functions"
+    ],
+    "deno.lint": true,
+    "deno.unstable": true,
+    "typescript.validate.enable": false,
+    "javascript.validate.enable": true
+}

@@ -32,6 +32,15 @@
                 <option value="20">Level 20</option>
             </select>
         </div>
+        <div class="setup-option">
+            <label>AI ENGINE:</label>
+            <select class="level-select" id="engineSelect">
+                <option value="chessapi" selected>Chess-API (Cloud)</option>
+                <option value="lichess">Lichess Cloud</option>
+                <option value="supabase">Supabase Edge</option>
+                <option value="local">Local Stockfish</option>
+            </select>
+        </div>
         <button class="start-btn" id="startGameBtn">START GAME</button>
     </div>
 
@@ -59,6 +68,10 @@
         </div>
     </div>
 
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase_client.js"></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script>
         // Game Logic adapted for pure JS (no modules) and Worker
@@ -74,6 +87,7 @@
         var isGameStarted = false;
         var fallbackEngine = false;
         var fallbackReason = '';
+        var selectedEngine = 'chessapi';
 
         // Pieces (Wikimedia)
         var pieces = {
@@ -179,6 +193,8 @@
                 whiteBtn.className = 'choice-btn';
             };
             startBtn.onclick = function () {
+                var engineSelect = document.getElementById('engineSelect');
+                selectedEngine = engineSelect.value;
                 aiLevel = parseInt(levelSelect.value);
                 setupView.style.display = 'none';
                 gameView.style.display = 'block';
@@ -195,18 +211,112 @@
                 return;
             }
 
-            if (!isEngineReady) {
-                updateStatus("Engine still loading...");
-                // Poll until engine is ready so Black starts reliably.
-                setTimeout(makeEngineMove, 500);
+            isEngineThinking = true;
+            updateStatus("AI THINKING...");
+
+            if (selectedEngine === 'local') {
+                if (!isEngineReady) {
+                    updateStatus("Engine still loading...");
+                    setTimeout(makeEngineMove, 500);
+                    return;
+                }
+                stockfish.postMessage('position fen ' + game.fen());
+                stockfish.postMessage('go depth ' + aiLevel);
+            } else if (selectedEngine === 'chessapi') {
+                makeChessApiMove();
+            } else if (selectedEngine === 'lichess') {
+                makeLichessMove();
+            } else if (selectedEngine === 'supabase') {
+                makeSupabaseMove();
+            }
+        }
+
+        function makeChessApiMove() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', 'https://chess-api.com/v1', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    isEngineThinking = false;
+                    if (xhr.status === 200) {
+                        var data = JSON.parse(xhr.responseText);
+                        if (data.move) {
+                            executeEngineMove(data.move);
+                        } else {
+                            makeFallbackMove();
+                        }
+                    } else {
+                        updateStatus("API Error - using fallback");
+                        makeFallbackMove();
+                    }
+                }
+            };
+            var depth = aiLevel > 15 ? 15 : aiLevel;
+            xhr.send(JSON.stringify({ fen: game.fen(), depth: depth }));
+        }
+
+        function makeLichessMove() {
+            var xhr = new XMLHttpRequest();
+            var fen = encodeURIComponent(game.fen());
+            xhr.open('GET', 'https://lichess.org/api/cloud-eval?fen=' + fen, true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    isEngineThinking = false;
+                    if (xhr.status === 200) {
+                        var data = JSON.parse(xhr.responseText);
+                        if (data.pvs && data.pvs.length > 0) {
+                            var moves = data.pvs[0].moves.split(' ');
+                            if (moves[0]) {
+                                executeEngineMove(moves[0]);
+                                return;
+                            }
+                        }
+                    }
+                    updateStatus("Lichess unavailable - using fallback");
+                    makeFallbackMove();
+                }
+            };
+            xhr.send();
+        }
+
+        function makeSupabaseMove() {
+            if (typeof getSupabase !== 'function') {
+                updateStatus("Supabase not configured - using fallback");
+                isEngineThinking = false;
+                makeFallbackMove();
                 return;
             }
+            var supabase = getSupabase();
+            if (!supabase) {
+                updateStatus("Supabase unavailable - using fallback");
+                isEngineThinking = false;
+                makeFallbackMove();
+                return;
+            }
+            supabase.functions.invoke('stockfish', { body: { fen: game.fen(), depth: 12 } })
+                .then(function (response) {
+                    isEngineThinking = false;
+                    if (response.data && response.data.bestmove) {
+                        executeEngineMove(response.data.bestmove);
+                    } else {
+                        updateStatus("Supabase error - using fallback");
+                        makeFallbackMove();
+                    }
+                })
+                .catch(function (error) {
+                    isEngineThinking = false;
+                    updateStatus("Supabase error - using fallback");
+                    makeFallbackMove();
+                });
+        }
 
-            isEngineThinking = true;
-            updateStatus("AI THINKING..."); // Explicit text for Kindle
-
-            stockfish.postMessage('position fen ' + game.fen());
-            stockfish.postMessage('go depth ' + aiLevel);
+        function executeEngineMove(move) {
+            var from = move.substring(0, 2);
+            var to = move.substring(2, 4);
+            var promo = move.length > 4 ? move.substring(4, 5) : undefined;
+            game.move({ from: from, to: to, promotion: promo });
+            renderBoard();
+            checkGameEnd();
         }
 
         function makeFallbackMove() {

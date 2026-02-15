@@ -158,13 +158,13 @@ body {
 }
 
 .square img {
-    width: 85%;
-    height: 85%;
+    width: 95%;
+    height: 95%;
     pointer-events: none;
 }
 
 /* ========== BLACK PIECE ROTATION (OTB) ========== */
-.square.black-piece img {
+.black-piece {
     transform: rotate(180deg);
 }
 

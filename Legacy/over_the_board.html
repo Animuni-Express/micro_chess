@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#22c55e">
+    <title>Micro Chess | Over The Board</title>
+    <link rel="manifest"
+        href="data:application/json;base64,eyJuYW1lIjoiQ2hlc3MgR2FtZSIsInNob3J0X25hbWUiOiJDaGVzcyIsInN0YXJ0X3VybCI6Ii8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMjJjNTVlIiwidGhlbWVfY29sb3IiOiIjMjJjNTVlIn0=">
+    <!-- ========== EXTERNAL STYLESHEET ========== -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="page-otb">
+    <!-- ========== BACK BUTTON ========== -->
+    <a href="index.html" class="back-button">← Home</a>
+
+    <!-- ========== COMPATIBILITY MODE BUTTON ========== -->
+    <a href="over_the_board_kindle.html" class="compat-button">📱 Kindle Mode</a>
+
+
+    <!-- ========== OFFLINE INDICATOR ========== -->
+    <div class="offline-badge" id="offlineBadge">✓ Offline Ready</div>
+
+    <!-- ========== GAME OVER ALERT ========== -->
+    <div class="game-over-overlay" id="gameOverOverlay">
+        <div class="game-over-dialog">
+            <div class="result-icon" id="resultIcon"></div>
+            <h2 id="gameOverTitle">Game Over</h2>
+            <p id="gameOverMessage">Result</p>
+            <button class="game-over-btn" id="newGameFromAlert">New Game</button>
+        </div>
+    </div>
+
+    <!-- ========== MAIN CONTAINER ========== -->
+    <div class="container">
+        <!-- ========== HEADER SECTION ========== -->
+        <div class="header">
+            <h1>♟ Over The Board ♟</h1>
+            <div class="turn-indicator">
+                Current Turn: <span id="turnDisplay">White</span>
+            </div>
+        </div>
+
+        <!-- ========== BOARD SECTION ========== -->
+        <div class="board-container">
+            <div class="board" id="board"></div>
+
+            <!-- ========== PROMOTION MODAL ========== -->
+            <div class="promotion-overlay" id="promotionOverlay">
+                <div class="promotion-dialog">
+                    <h3>Choose Promotion</h3>
+                    <div class="promotion-choices" id="promotionChoices"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== STATUS SECTION ========== -->
+        <div class="status" id="status">Make your move</div>
+
+        <!-- ========== CONTROLS SECTION ========== -->
+        <div class="controls">
+            <button class="btn btn-primary" id="newGame">New Game</button>
+            <button class="btn btn-secondary" id="undoBtn">Undo Move</button>
+        </div>
+    </div>
+
+    <!-- ========== SERVICE WORKER REGISTRATION ========== -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                const CACHE_NAME = 'chess-offline-v1';
+
+                self.addEventListener('install', (event) => {
+                    self.skipWaiting();
+                    event.waitUntil(
+                        caches.open(CACHE_NAME).then((cache) => {
+                            return cache.addAll([
+                                '/',
+                                'https://unpkg.com/chess.js@1.0.0-beta.8/dist/esm/chess.js'
+                            ]);
+                        })
+                    );
+                });
+
+                self.addEventListener('activate', (event) => {
+                    event.waitUntil(self.clients.claim());
+                });
+
+                self.addEventListener('fetch', (event) => {
+                    event.respondWith(
+                        caches.match(event.request).then((response) => {
+                            return response || fetch(event.request).then((fetchResponse) => {
+                                return caches.open(CACHE_NAME).then((cache) => {
+                                    cache.put(event.request, fetchResponse.clone());
+                                    return fetchResponse;
+                                });
+                            });
+                        }).catch(() => {
+                            return caches.match(event.request);
+                        })
+                    );
+                });
+            `;
+
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+
+            navigator.serviceWorker.register(swUrl).then(() => {
+                console.log('✓ Service Worker registered - App works offline!');
+                setTimeout(() => {
+                    document.getElementById('offlineBadge').classList.add('show');
+                    setTimeout(() => {
+                        document.getElementById('offlineBadge').classList.remove('show');
+                    }, 3000);
+                }, 1000);
+            }).catch((err) => {
+                console.log('Service Worker registration failed:', err);
+            });
+        }
+    </script>
+
+    <!-- ========== CHESS GAME LOGIC ========== -->
+    <script type="module">
+        // Import chess.js from unpkg CDN
+        import { Chess } from 'https://unpkg.com/chess.js@1.0.0-beta.8/dist/esm/chess.js';
+
+        // ========== GAME STATE VARIABLES ==========
+        let game = new Chess();
+        let selectedSquare = null;
+        let validMoves = [];
+        let pendingPromotion = null;
+
+        // ========== PIECE UNICODE MAPPING ==========
+        const pieces = {
+            'wp': '♙', 'wn': '♘', 'wb': '♗', 'wr': '♖', 'wq': '♕', 'wk': '♔',
+            'bp': '♟', 'bn': '♞', 'bb': '♝', 'br': '♜', 'bq': '♛', 'bk': '♚'
+        };
+
+        // ========== BOARD RENDERING FUNCTION ==========
+        function renderBoard() {
+            const board = document.getElementById('board');
+            board.innerHTML = '';
+
+            const position = game.board();
+
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const square = String.fromCharCode(97 + col) + (8 - row);
+                    const piece = position[row][col];
+
+                    const squareEl = document.createElement('div');
+                    squareEl.className = 'square ' + ((row + col) % 2 === 0 ? 'light' : 'dark');
+                    squareEl.dataset.square = square;
+
+                    if (piece) {
+                        squareEl.textContent = pieces[piece.color + piece.type];
+                        // Rotate black pieces 180 degrees for realistic board feel
+                        if (piece.color === 'b') {
+                            squareEl.classList.add('black-piece');
+                        }
+                    }
+
+                    squareEl.addEventListener('click', () => handleSquareClick(square));
+                    board.appendChild(squareEl);
+                }
+            }
+
+            updateStatus();
+        }
+
+        // ========== SQUARE CLICK HANDLER ==========
+        function handleSquareClick(square) {
+            // Prevent moves if game is over
+            if (game.isGameOver()) return;
+
+            const clickedPiece = game.get(square);
+
+            if (selectedSquare === null) {
+                if (clickedPiece && clickedPiece.color === game.turn()) {
+                    selectedSquare = square;
+                    validMoves = game.moves({ square, verbose: true });
+                    highlightSquares();
+                }
+            } else {
+                if (clickedPiece && clickedPiece.color === game.turn()) {
+                    selectedSquare = square;
+                    validMoves = game.moves({ square, verbose: true });
+                    highlightSquares();
+                }
+                else if (square === selectedSquare) {
+                    clearSelection();
+                }
+                else {
+                    makeMove(selectedSquare, square);
+                }
+            }
+        }
+
+        // ========== MOVE EXECUTION FUNCTION ==========
+        function makeMove(from, to) {
+            const piece = game.get(from);
+            const toRank = to[1];
+
+            if (piece && piece.type === 'p' && (toRank === '8' || toRank === '1')) {
+                pendingPromotion = { from, to };
+                showPromotionDialog(piece.color);
+            } else {
+                const move = game.move({ from, to });
+
+                if (move) {
+                    clearSelection();
+                    renderBoard();
+                } else {
+                    clearSelection();
+                }
+            }
+        }
+
+        // ========== PROMOTION DIALOG DISPLAY ==========
+        function showPromotionDialog(color) {
+            const overlay = document.getElementById('promotionOverlay');
+            const choices = document.getElementById('promotionChoices');
+            choices.innerHTML = '';
+
+            const promotionPieces = ['q', 'r', 'b', 'n'];
+
+            promotionPieces.forEach(pieceType => {
+                const pieceBtn = document.createElement('div');
+                pieceBtn.className = 'promotion-piece';
+                pieceBtn.textContent = pieces[color + pieceType];
+                pieceBtn.addEventListener('click', () => {
+                    executePromotion(pieceType);
+                });
+                choices.appendChild(pieceBtn);
+            });
+
+            overlay.classList.add('show');
+        }
+
+        // ========== PROMOTION EXECUTION ==========
+        function executePromotion(pieceType) {
+            if (!pendingPromotion) return;
+
+            const move = game.move({
+                from: pendingPromotion.from,
+                to: pendingPromotion.to,
+                promotion: pieceType
+            });
+
+            if (move) {
+                clearSelection();
+                hidePromotionDialog();
+                pendingPromotion = null;
+                renderBoard();
+            }
+        }
+
+        // ========== HIDE PROMOTION DIALOG ==========
+        function hidePromotionDialog() {
+            document.getElementById('promotionOverlay').classList.remove('show');
+        }
+
+        // ========== GAME OVER ALERT FUNCTION ==========
+        function showGameOverAlert(title, message, icon) {
+            document.getElementById('gameOverTitle').textContent = title;
+            document.getElementById('gameOverMessage').textContent = message;
+            document.getElementById('resultIcon').textContent = icon;
+            document.getElementById('gameOverOverlay').classList.add('show');
+        }
+
+        // ========== HIDE GAME OVER ALERT ==========
+        function hideGameOverAlert() {
+            document.getElementById('gameOverOverlay').classList.remove('show');
+        }
+
+        // ========== CLEAR SELECTION ==========
+        function clearSelection() {
+            selectedSquare = null;
+            validMoves = [];
+            document.querySelectorAll('.square').forEach(sq => {
+                sq.classList.remove('selected', 'valid-move');
+            });
+        }
+
+        // ========== HIGHLIGHT VALID MOVES ==========
+        function highlightSquares() {
+            document.querySelectorAll('.square').forEach(sq => {
+                sq.classList.remove('selected', 'valid-move');
+
+                if (sq.dataset.square === selectedSquare) {
+                    sq.classList.add('selected');
+                }
+
+                if (validMoves.some(m => m.to === sq.dataset.square)) {
+                    sq.classList.add('valid-move');
+                }
+            });
+        }
+
+        // ========== STATUS UPDATE FUNCTION ==========
+        function updateStatus() {
+            const turn = game.turn() === 'w' ? 'White' : 'Black';
+            document.getElementById('turnDisplay').textContent = turn;
+
+            let status = '';
+
+            if (game.isCheckmate()) {
+                const winner = game.turn() === 'w' ? 'Black' : 'White';
+                status = `Checkmate! ${winner} wins!`;
+                showGameOverAlert('Checkmate!', `${winner} wins the game!`, '👑');
+            } else if (game.isStalemate()) {
+                status = 'Stalemate!';
+                showGameOverAlert('Stalemate!', 'The game is a draw', '🤝');
+            } else if (game.isDraw()) {
+                status = 'Game is a draw';
+                showGameOverAlert('Draw!', 'The game ended in a draw', '🤝');
+            } else if (game.isCheck()) {
+                status = `${turn} is in check!`;
+            } else {
+                status = `${turn}'s turn to move`;
+            }
+
+            document.getElementById('status').textContent = status;
+        }
+
+        // ========== NEW GAME BUTTON ==========
+        document.getElementById('newGame').addEventListener('click', () => {
+            game = new Chess();
+            clearSelection();
+            hidePromotionDialog();
+            hideGameOverAlert();
+            pendingPromotion = null;
+            renderBoard();
+        });
+
+        // ========== NEW GAME FROM ALERT BUTTON ==========
+        document.getElementById('newGameFromAlert').addEventListener('click', () => {
+            game = new Chess();
+            clearSelection();
+            hidePromotionDialog();
+            hideGameOverAlert();
+            pendingPromotion = null;
+            renderBoard();
+        });
+
+        // ========== UNDO BUTTON ==========
+        document.getElementById('undoBtn').addEventListener('click', () => {
+            if (!game.history().length) {
+                document.getElementById('status').textContent = 'No moves to undo!';
+                return;
+            }
+            game.undo();
+            clearSelection();
+            hidePromotionDialog();
+            hideGameOverAlert();
+            pendingPromotion = null;
+            renderBoard();
+        });
+
+        // ========== INITIAL RENDER ==========
+        renderBoard();
+    </script>
+</body>
+
+</html>

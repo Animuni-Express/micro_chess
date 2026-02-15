@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#22c55e">
+    <title>Micro Chess - Play Chess Online</title>
+    <!-- ========== EXTERNAL STYLESHEET ========== -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="page-index">
+    <div class="container">
+        <!-- ========== HEADER SECTION ========== -->
+        <div class="header">
+            <h1>Micro Chess</h1>
+        </div>
+
+        <!-- ========== OVER THE BOARD CARD ========== -->
+        <div class="card green" onclick="location.href='over_the_board.html'">
+            <h2>Over The Board</h2>
+            <p>Play With a friend in a</p>
+            <p>Virtual ChessBoard</p>
+        </div>
+
+        <!-- ========== STOCKFISH CARD ========== -->
+        <div class="card green disabled">
+            <h2>Play With Stockfish</h2>
+            <p>Play with the Worlds Best Chess AI</p>
+            <p class="status">Still in Beta</p>
+            <p class="status">Coming Soon</p>
+        </div>
+
+        <!-- ========== CHATGPT CARD ========== -->
+        <div class="card red disabled">
+            <h2>Play with ChatGPT!</h2>
+            <p>Play with The best Chatbot of 2026</p>
+            <p class="status">Coming in a long time. Please Wait</p>
+        </div>
+
+        <!-- ========== FOOTER SECTION ========== -->
+        <div class="footer">
+            <p onclick="location.href='about.html'">About Micro Chess by Aniket Shenoy</p>
+        </div>
+    </div>
+
+    <!-- ========== JAVASCRIPT ========== -->
+    <script>
+        // Prevent clicking on disabled cards
+        document.querySelectorAll('.card.disabled').forEach(card => {
+            card.onclick = (e) => {
+                e.preventDefault();
+                return false;
+            };
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Micro Chess | Kindle Mode</title>
+    <!-- ========== EXTERNAL STYLESHEET ========== -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="page-kindle">
+    <a href="over_the_board.html" class="back-button">← Normal Mode</a>
+    <span class="compat-badge">Kindle Compatible</span>
+
+    <div class="container">
+        <h1>♟ Over The Board ♟</h1>
+        <div class="turn-indicator">
+            Current Turn: <span id="turnDisplay">White</span>
+        </div>
+
+        <div class="board-container">
+            <table id="board"></table>
+        </div>
+
+        <div class="status" id="status">Make your move</div>
+
+        <div>
+            <button class="btn btn-primary" id="newGame">New Game</button>
+            <button class="btn btn-secondary" id="undoBtn">Undo Move</button>
+        </div>
+    </div>
+
+    <div class="promotion-overlay" id="promotionOverlay">
+        <div class="promotion-dialog">
+            <h3>Choose Promotion</h3>
+            <div id="promotionChoices"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script>
+        var game = new Chess();
+        var selectedSquare = null;
+        var validMoves = [];
+        var pendingPromotion = null;
+
+        var pieces = {
+            'wp': '♙', 'wn': '♘', 'wb': '♗', 'wr': '♖', 'wq': '♕', 'wk': '♔',
+            'bp': '♟', 'bn': '♞', 'bb': '♝', 'br': '♜', 'bq': '♛', 'bk': '♚'
+        };
+
+        function renderBoard() {
+            var board = document.getElementById('board');
+            board.innerHTML = '';
+            var position = game.board();
+
+            for (var row = 0; row < 8; row++) {
+                var tr = document.createElement('tr');
+                for (var col = 0; col < 8; col++) {
+                    var square = String.fromCharCode(97 + col) + (8 - row);
+                    var piece = position[row][col];
+                    var td = document.createElement('td');
+                    td.className = (row + col) % 2 === 0 ? 'light' : 'dark';
+                    td.setAttribute('data-square', square);
+
+                    if (piece) {
+                        var span = document.createElement('span');
+                        span.textContent = pieces[piece.color + piece.type];
+                        if (piece.color === 'b') {
+                            span.className = 'black-piece';
+                        }
+                        td.appendChild(span);
+                    }
+
+                    td.onclick = (function (sq) {
+                        return function () { handleSquareClick(sq); };
+                    })(square);
+
+                    tr.appendChild(td);
+                }
+                board.appendChild(tr);
+            }
+            updateStatus();
+        }
+
+        function handleSquareClick(square) {
+            if (game.game_over()) return;
+            var clickedPiece = game.get(square);
+
+            if (selectedSquare === null) {
+                if (clickedPiece && clickedPiece.color === game.turn()) {
+                    selectedSquare = square;
+                    validMoves = game.moves({ square: square, verbose: true });
+                    highlightSquares();
+                }
+            } else {
+                if (clickedPiece && clickedPiece.color === game.turn()) {
+                    selectedSquare = square;
+                    validMoves = game.moves({ square: square, verbose: true });
+                    highlightSquares();
+                } else if (square === selectedSquare) {
+                    clearSelection();
+                } else {
+                    makeMove(selectedSquare, square);
+                }
+            }
+        }
+
+        function makeMove(from, to) {
+            var piece = game.get(from);
+            var toRank = to[1];
+
+            if (piece && piece.type === 'p' && (toRank === '8' || toRank === '1')) {
+                pendingPromotion = { from: from, to: to };
+                showPromotionDialog(piece.color);
+            } else {
+                var move = game.move({ from: from, to: to });
+                if (move) {
+                    clearSelection();
+                    renderBoard();
+                } else {
+                    clearSelection();
+                }
+            }
+        }
+
+        function showPromotionDialog(color) {
+            var overlay = document.getElementById('promotionOverlay');
+            var choices = document.getElementById('promotionChoices');
+            choices.innerHTML = '';
+            var promotionPieces = ['q', 'r', 'b', 'n'];
+
+            for (var i = 0; i < promotionPieces.length; i++) {
+                var pieceType = promotionPieces[i];
+                var pieceBtn = document.createElement('div');
+                pieceBtn.className = 'promotion-piece';
+                pieceBtn.textContent = pieces[color + pieceType];
+                pieceBtn.onclick = (function (pt) {
+                    return function () { executePromotion(pt); };
+                })(pieceType);
+                choices.appendChild(pieceBtn);
+            }
+            overlay.classList.add('show');
+        }
+
+        function executePromotion(pieceType) {
+            if (!pendingPromotion) return;
+            var move = game.move({
+                from: pendingPromotion.from,
+                to: pendingPromotion.to,
+                promotion: pieceType
+            });
+            if (move) {
+                clearSelection();
+                hidePromotionDialog();
+                pendingPromotion = null;
+                renderBoard();
+            }
+        }
+
+        function hidePromotionDialog() {
+            document.getElementById('promotionOverlay').classList.remove('show');
+        }
+
+        function clearSelection() {
+            selectedSquare = null;
+            validMoves = [];
+            var cells = document.getElementsByTagName('td');
+            for (var i = 0; i < cells.length; i++) {
+                cells[i].classList.remove('selected', 'valid-move');
+            }
+        }
+
+        function highlightSquares() {
+            var cells = document.getElementsByTagName('td');
+            for (var i = 0; i < cells.length; i++) {
+                var cell = cells[i];
+                cell.classList.remove('selected', 'valid-move');
+                if (cell.getAttribute('data-square') === selectedSquare) {
+                    cell.classList.add('selected');
+                }
+                for (var j = 0; j < validMoves.length; j++) {
+                    if (validMoves[j].to === cell.getAttribute('data-square')) {
+                        cell.classList.add('valid-move');
+                    }
+                }
+            }
+        }
+
+        function updateStatus() {
+            var turn = game.turn() === 'w' ? 'White' : 'Black';
+            document.getElementById('turnDisplay').textContent = turn;
+            var status = '';
+
+            if (game.in_checkmate()) {
+                var winner = game.turn() === 'w' ? 'Black' : 'White';
+                status = 'Checkmate! ' + winner + ' wins!';
+            } else if (game.in_stalemate()) {
+                status = 'Stalemate!';
+            } else if (game.in_draw()) {
+                status = 'Game is a draw';
+            } else if (game.in_check()) {
+                status = turn + ' is in check!';
+            } else {
+                status = turn + "'s turn to move";
+            }
+            document.getElementById('status').textContent = status;
+        }
+
+        document.getElementById('newGame').onclick = function () {
+            game = new Chess();
+            clearSelection();
+            hidePromotionDialog();
+            pendingPromotion = null;
+            renderBoard();
+        };
+
+        document.getElementById('undoBtn').onclick = function () {
+            if (game.history().length === 0) {
+                document.getElementById('status').textContent = 'No moves to undo!';
+                return;
+            }
+            game.undo();
+            clearSelection();
+            hidePromotionDialog();
+            pendingPromotion = null;
+            renderBoard();
+        };
+
+        renderBoard();
+    </script>
+</body>
+
+</html>

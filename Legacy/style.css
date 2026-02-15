@@ -1,0 +1,1122 @@
+/* ==========================================================================
+   MICRO CHESS - LEGACY MODE STYLESHEET
+   Unified styles for: index.html, about.html, over_the_board.html,
+                        over_the_board_kindle.html
+   ========================================================================== */
+
+
+/* ==========================================================================
+   1. GLOBAL RESET
+   ========================================================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+/* ==========================================================================
+   2. ROOT VARIABLES (shared across all pages)
+   ========================================================================== */
+:root {
+    /* -- Green palette -- */
+    --green-primary: #22c55e;
+    --green-dark: #16a34a;
+    --green-light: #86efac;
+
+    /* -- Red palette (index page) -- */
+    --red-primary: #ef4444;
+    --red-dark: #dc2626;
+
+    /* -- Neutrals -- */
+    --white: #ffffff;
+    --gray-light: #f8f9fa;
+    --text-dark: #1a1a1a;
+    --text-gray: #4b5563;
+    --text-light: #666666;
+
+    /* -- Board colours -- */
+    --light-sq: #f0d9b5;
+    --dark-sq: #b58863;
+
+    /* -- Misc -- */
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+
+/* ==========================================================================
+   3. SHARED BODY / FONT STACK
+   ========================================================================== */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+        'Helvetica Neue', Arial, sans-serif;
+    min-height: 100vh;
+}
+
+
+/* ==========================================================================
+   4. INDEX PAGE STYLES  (index.html)
+   ========================================================================== */
+
+/* -- Body override for index -- */
+body.page-index {
+    background: linear-gradient(135deg, var(--green-primary) 0%, var(--green-dark) 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+/* -- Container -- */
+body.page-index .container {
+    background: var(--white);
+    max-width: 600px;
+    width: 100%;
+    border-radius: 0;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+/* -- Header -- */
+body.page-index .header {
+    background: var(--white);
+    padding: 40px 20px;
+    text-align: center;
+}
+
+body.page-index .header h1 {
+    font-size: clamp(36px, 8vw, 64px);
+    font-weight: 700;
+    color: var(--green-primary);
+    line-height: 1.2;
+}
+
+/* -- Card -- */
+body.page-index .card {
+    padding: 30px 40px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+}
+
+body.page-index .card:hover {
+    transform: translateY(-2px);
+    box-shadow: inset 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+body.page-index .card.green {
+    background: var(--green-primary);
+}
+
+body.page-index .card.red {
+    background: var(--red-primary);
+}
+
+body.page-index .card.disabled {
+    opacity: 0.95;
+    cursor: not-allowed;
+}
+
+body.page-index .card.disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+body.page-index .card h2 {
+    font-size: clamp(28px, 6vw, 42px);
+    font-weight: 800;
+    color: var(--text-dark);
+    margin-bottom: 12px;
+    line-height: 1.2;
+}
+
+body.page-index .card p {
+    font-size: clamp(16px, 3.5vw, 20px);
+    color: var(--text-dark);
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+body.page-index .card .status {
+    font-size: clamp(14px, 3vw, 18px);
+    color: var(--red-dark);
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+body.page-index .card.red .status {
+    color: var(--text-dark);
+}
+
+/* -- Footer -- */
+body.page-index .footer {
+    background: var(--white);
+    padding: 30px 20px;
+    text-align: center;
+}
+
+body.page-index .footer p {
+    font-size: clamp(16px, 3.5vw, 20px);
+    color: var(--text-dark);
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+body.page-index .footer p:hover {
+    color: var(--green-primary);
+}
+
+/* -- Index responsive -- */
+@media (max-width: 768px) {
+    body.page-index {
+        padding: 10px;
+    }
+
+    body.page-index .header {
+        padding: 30px 15px;
+    }
+
+    body.page-index .card {
+        padding: 25px 20px;
+    }
+
+    body.page-index .footer {
+        padding: 25px 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    body.page-index {
+        padding: 5px;
+    }
+
+    body.page-index .header {
+        padding: 25px 15px;
+    }
+
+    body.page-index .card {
+        padding: 20px 15px;
+    }
+
+    body.page-index .footer {
+        padding: 20px 15px;
+    }
+}
+
+
+/* ==========================================================================
+   5. ABOUT PAGE STYLES  (about.html)
+   ========================================================================== */
+
+/* -- Body override for about -- */
+body.page-about {
+    background: linear-gradient(135deg, var(--green-primary) 0%, var(--green-dark) 100%);
+    padding: 20px;
+}
+
+/* -- Container -- */
+body.page-about .container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+/* -- Header -- */
+body.page-about .header {
+    background: var(--green-primary);
+    padding: 40px 30px;
+    text-align: center;
+}
+
+body.page-about .header h1 {
+    font-size: clamp(32px, 6vw, 48px);
+    font-weight: 800;
+    color: var(--white);
+    margin-bottom: 10px;
+}
+
+body.page-about .header p {
+    font-size: clamp(16px, 3vw, 20px);
+    color: var(--white);
+    opacity: 0.95;
+}
+
+/* -- Back button -- */
+body.page-about .back-btn {
+    display: inline-block;
+    margin: 30px 30px 0;
+    padding: 12px 24px;
+    background: var(--green-primary);
+    color: var(--white);
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 16px;
+    transition: all 0.2s;
+}
+
+body.page-about .back-btn:hover {
+    background: var(--green-dark);
+    transform: translateX(-4px);
+}
+
+/* -- Content area -- */
+body.page-about .content {
+    padding: 40px 30px;
+}
+
+/* -- Sections -- */
+body.page-about .section {
+    margin-bottom: 40px;
+}
+
+body.page-about .section:last-child {
+    margin-bottom: 0;
+}
+
+body.page-about .section h2 {
+    font-size: clamp(24px, 4vw, 32px);
+    font-weight: 700;
+    color: var(--green-dark);
+    margin-bottom: 16px;
+    border-bottom: 3px solid var(--green-light);
+    padding-bottom: 8px;
+}
+
+body.page-about .section h3 {
+    font-size: clamp(18px, 3.5vw, 24px);
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-top: 20px;
+    margin-bottom: 12px;
+}
+
+body.page-about .section p {
+    font-size: clamp(15px, 2.5vw, 18px);
+    line-height: 1.7;
+    color: var(--text-gray);
+    margin-bottom: 16px;
+}
+
+body.page-about .section ul {
+    margin-left: 20px;
+    margin-bottom: 16px;
+}
+
+body.page-about .section li {
+    font-size: clamp(15px, 2.5vw, 18px);
+    line-height: 1.7;
+    color: var(--text-gray);
+    margin-bottom: 10px;
+}
+
+body.page-about .section a {
+    color: var(--green-primary);
+    text-decoration: none;
+    font-weight: 600;
+    border-bottom: 2px solid transparent;
+    transition: border-color 0.2s;
+}
+
+body.page-about .section a:hover {
+    border-bottom-color: var(--green-primary);
+}
+
+/* -- Highlight boxes -- */
+body.page-about .highlight-box {
+    background: var(--gray-light);
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid var(--green-primary);
+    margin-bottom: 16px;
+}
+
+body.page-about .highlight-box p {
+    margin-bottom: 0;
+    font-style: italic;
+}
+
+body.page-about .highlight-box.strong {
+    border-left-color: #3b82f6;
+    background: linear-gradient(90deg, var(--gray-light), #dbeafe);
+}
+
+/* -- Contact box -- */
+body.page-about .contact-box {
+    background: linear-gradient(135deg, var(--green-primary), var(--green-dark));
+    padding: 30px;
+    border-radius: 12px;
+    margin: 25px 0;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+body.page-about .contact-box h3 {
+    color: var(--white);
+    font-size: clamp(20px, 4vw, 26px);
+    margin-bottom: 15px;
+}
+
+body.page-about .contact-box p {
+    color: var(--white);
+    font-size: clamp(16px, 3vw, 20px);
+    margin-bottom: 20px;
+    opacity: 0.95;
+}
+
+body.page-about .contact-box a {
+    display: inline-block;
+    color: var(--green-dark);
+    background: var(--white);
+    padding: 12px 30px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: clamp(16px, 3vw, 18px);
+    margin: 8px;
+    transition: all 0.3s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+body.page-about .contact-box a:hover {
+    background: var(--green-light);
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* -- Feature grid -- */
+body.page-about .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+body.page-about .feature-card {
+    background: var(--gray-light);
+    padding: 20px;
+    border-radius: 8px;
+    border-top: 4px solid var(--green-primary);
+}
+
+body.page-about .feature-card h4 {
+    font-size: clamp(16px, 3vw, 20px);
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 10px;
+}
+
+body.page-about .feature-card p {
+    font-size: clamp(14px, 2.5vw, 16px);
+    margin-bottom: 0;
+}
+
+/* -- Footer -- */
+body.page-about .footer {
+    background: var(--green-dark);
+    padding: 30px;
+    text-align: center;
+    color: var(--white);
+}
+
+body.page-about .footer p {
+    font-size: clamp(14px, 2.5vw, 16px);
+    margin-bottom: 8px;
+}
+
+body.page-about .footer a {
+    color: var(--green-light);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+body.page-about .footer a:hover {
+    color: var(--white);
+    text-decoration: underline;
+}
+
+/* -- About responsive -- */
+@media (max-width: 768px) {
+    body.page-about {
+        padding: 10px;
+    }
+
+    body.page-about .header {
+        padding: 30px 20px;
+    }
+
+    body.page-about .content {
+        padding: 30px 20px;
+    }
+
+    body.page-about .back-btn {
+        margin: 20px 20px 0;
+    }
+
+    body.page-about .feature-grid {
+        grid-template-columns: 1fr;
+    }
+
+    body.page-about .contact-box {
+        padding: 25px 20px;
+    }
+
+    body.page-about .contact-box a {
+        display: block;
+        margin: 10px auto;
+        max-width: 280px;
+    }
+}
+
+@media (max-width: 480px) {
+    body.page-about {
+        padding: 5px;
+    }
+
+    body.page-about .header {
+        padding: 25px 15px;
+    }
+
+    body.page-about .content {
+        padding: 25px 15px;
+    }
+
+    body.page-about .back-btn {
+        margin: 15px 15px 0;
+        padding: 10px 20px;
+    }
+
+    body.page-about .section {
+        margin-bottom: 30px;
+    }
+
+    body.page-about .contact-box {
+        padding: 20px 15px;
+    }
+}
+
+
+/* ==========================================================================
+   6. OVER THE BOARD PAGE STYLES  (over_the_board.html)
+   ========================================================================== */
+
+/* -- Body override for OTB -- */
+body.page-otb {
+    background: linear-gradient(135deg, var(--green-primary) 0%, var(--green-dark) 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 12px;
+}
+
+/* -- Back button (fixed) -- */
+body.page-otb .back-button {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    padding: 10px 20px;
+    background: var(--white);
+    color: var(--green-primary);
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+body.page-otb .back-button:hover {
+    background: var(--green-primary);
+    color: var(--white);
+    transform: translateX(-4px);
+}
+
+/* -- Container -- */
+body.page-otb .container {
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    padding: 16px;
+    max-width: 550px;
+    width: 100%;
+    position: relative;
+}
+
+/* -- Header -- */
+body.page-otb .header {
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+body.page-otb .header h1 {
+    font-size: 28px;
+    color: var(--green-primary);
+    margin-bottom: 8px;
+}
+
+/* -- Turn indicator -- */
+body.page-otb .turn-indicator {
+    font-size: 14px;
+    color: var(--text-light);
+}
+
+body.page-otb .turn-indicator span {
+    padding: 4px 12px;
+    background: #f0e68c;
+    border-radius: 20px;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+/* -- Board container -- */
+body.page-otb .board-container {
+    width: 100%;
+    aspect-ratio: 1;
+    margin: 0 auto 16px;
+    border: 3px solid var(--green-primary);
+    border-radius: 8px;
+    overflow: hidden;
+    box-sizing: border-box;
+    position: relative;
+}
+
+/* -- Board grid -- */
+body.page-otb .board {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    width: 100%;
+    height: 100%;
+}
+
+/* -- Squares -- */
+body.page-otb .square {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(28px, 5.5vw, 48px);
+    cursor: pointer;
+    user-select: none;
+    /* Use a font stack that favors chess symbols */
+    font-family: "Segoe UI Symbol", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "DejaVu Sans", sans-serif;
+}
+
+body.page-otb .square.light {
+    background: var(--light-sq);
+}
+
+body.page-otb .square.dark {
+    background: var(--dark-sq);
+}
+
+body.page-otb .square.selected {
+    box-shadow: inset 0 0 0 4px #ff6b6b;
+}
+
+body.page-otb .square.valid-move {
+    box-shadow: inset 0 0 0 3px rgba(34, 197, 94, 0.7);
+}
+
+body.page-otb .square:hover {
+    opacity: 0.85;
+}
+
+/* -- Black piece rotation -- */
+body.page-otb .square.black-piece {
+    transform: rotate(180deg);
+}
+
+/* -- Promotion overlay -- */
+body.page-otb .promotion-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    border-radius: 8px;
+}
+
+body.page-otb .promotion-overlay.show {
+    display: flex;
+}
+
+body.page-otb .promotion-dialog {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    text-align: center;
+}
+
+body.page-otb .promotion-dialog h3 {
+    color: var(--green-primary);
+    margin-bottom: 16px;
+    font-size: 18px;
+}
+
+body.page-otb .promotion-choices {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+body.page-otb .promotion-piece {
+    width: 70px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    cursor: pointer;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background: #f8f9fa;
+    transition: all 0.2s;
+    font-family: "Segoe UI Symbol", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "DejaVu Sans", sans-serif;
+}
+
+body.page-otb .promotion-piece:hover {
+    background: var(--light-sq);
+    border-color: var(--green-primary);
+    transform: scale(1.1);
+}
+
+/* -- Game-over overlay -- */
+body.page-otb .game-over-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+body.page-otb .game-over-overlay.show {
+    display: flex;
+}
+
+body.page-otb .game-over-dialog {
+    background: white;
+    padding: 32px;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    animation: slideDown 0.3s ease-out;
+}
+
+/* -- Slide-down keyframes -- */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+body.page-otb .game-over-dialog h2 {
+    color: var(--green-primary);
+    font-size: 32px;
+    margin-bottom: 16px;
+}
+
+body.page-otb .game-over-dialog p {
+    color: var(--text-dark);
+    font-size: 18px;
+    margin-bottom: 24px;
+}
+
+body.page-otb .game-over-dialog .result-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+}
+
+body.page-otb .game-over-btn {
+    padding: 12px 32px;
+    background: var(--green-primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+body.page-otb .game-over-btn:hover {
+    background: var(--green-dark);
+    transform: translateY(-2px);
+}
+
+/* -- Controls -- */
+body.page-otb .controls {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+body.page-otb .btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+body.page-otb .btn-primary {
+    background: var(--green-primary);
+    color: white;
+}
+
+body.page-otb .btn-primary:hover {
+    background: var(--green-dark);
+}
+
+body.page-otb .btn-secondary {
+    background: #ccc;
+    color: var(--text-dark);
+}
+
+body.page-otb .btn-secondary:hover {
+    background: #b8b8b8;
+}
+
+/* -- Status bar -- */
+body.page-otb .status {
+    text-align: center;
+    margin-top: 12px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    font-size: 14px;
+    color: var(--text-dark);
+}
+
+/* -- Compatibility-mode button -- */
+body.page-otb .compat-button {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    background: #3b82f6;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+body.page-otb .compat-button:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+}
+
+/* -- Offline badge -- */
+body.page-otb .offline-badge {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    padding: 6px 12px;
+    background: #4caf50;
+    color: white;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    display: none;
+    z-index: 1000;
+}
+
+body.page-otb .offline-badge.show {
+    display: block;
+}
+
+/* -- OTB responsive -- */
+@media (max-width: 480px) {
+    body.page-otb {
+        padding: 8px;
+    }
+
+    body.page-otb .container {
+        padding: 12px;
+    }
+
+    body.page-otb .header h1 {
+        font-size: 22px;
+    }
+
+    body.page-otb .promotion-piece {
+        width: 60px;
+        height: 60px;
+        font-size: 40px;
+    }
+
+    body.page-otb .game-over-dialog {
+        padding: 24px;
+    }
+
+    body.page-otb .game-over-dialog h2 {
+        font-size: 24px;
+    }
+
+    body.page-otb .game-over-dialog p {
+        font-size: 16px;
+    }
+
+    body.page-otb .back-button {
+        top: 10px;
+        left: 10px;
+        padding: 8px 16px;
+        font-size: 12px;
+    }
+
+    body.page-otb .compat-button {
+        top: 10px;
+        right: 10px;
+        padding: 8px 16px;
+        font-size: 12px;
+    }
+}
+
+
+/* ==========================================================================
+   7. OVER THE BOARD KINDLE STYLES  (over_the_board_kindle.html)
+   ========================================================================== */
+
+/* -- Body override for Kindle -- */
+body.page-kindle {
+    font-family: Arial, sans-serif;
+    background: #22c55e;
+    padding: 10px;
+    text-align: center;
+}
+
+/* -- Back button (inline) -- */
+body.page-kindle .back-button {
+    display: inline-block;
+    margin: 10px;
+    padding: 12px 24px;
+    background: white;
+    color: #22c55e;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* -- Compat badge -- */
+body.page-kindle .compat-badge {
+    display: inline-block;
+    margin: 10px;
+    padding: 8px 16px;
+    background: #3b82f6;
+    color: white;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* -- Container -- */
+body.page-kindle .container {
+    background: white;
+    border-radius: 10px;
+    padding: 15px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* -- Heading -- */
+body.page-kindle #board span {
+    font-size: 42px;
+    cursor: pointer;
+    font-family: "Segoe UI Symbol", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "DejaVu Sans", sans-serif;
+}
+
+body.page-kindle h1 {
+    font-size: 24px;
+    color: #22c55e;
+    margin-bottom: 10px;
+}
+
+/* -- Turn indicator -- */
+body.page-kindle .turn-indicator {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 15px;
+}
+
+body.page-kindle .turn-indicator span {
+    padding: 6px 15px;
+    background: #f0e68c;
+    border-radius: 15px;
+    font-weight: bold;
+    color: #1a1a1a;
+}
+
+/* -- Board container -- */
+body.page-kindle .board-container {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto 15px;
+    border: 4px solid #22c55e;
+    border-radius: 8px;
+}
+
+/* -- Table-based board -- */
+body.page-kindle table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+body.page-kindle td {
+    width: 12.5%;
+    height: 60px;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 48px;
+    cursor: pointer;
+}
+
+body.page-kindle .light {
+    background: #f0d9b5;
+}
+
+body.page-kindle .dark {
+    background: #b58863;
+}
+
+body.page-kindle .selected {
+    box-shadow: inset 0 0 0 4px #ff6b6b;
+}
+
+body.page-kindle .valid-move {
+    box-shadow: inset 0 0 0 3px #22c55e;
+}
+
+/* -- Black piece rotation (with vendor prefixes) -- */
+body.page-kindle .black-piece {
+    display: inline-block;
+    -webkit-transform: rotate(180deg);
+    -moz-transform: rotate(180deg);
+    -ms-transform: rotate(180deg);
+    -o-transform: rotate(180deg);
+    transform: rotate(180deg);
+}
+
+/* -- Status bar -- */
+body.page-kindle .status {
+    text-align: center;
+    margin: 15px 0;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    font-size: 16px;
+    color: #1a1a1a;
+    font-weight: bold;
+}
+
+/* -- Buttons -- */
+body.page-kindle .btn {
+    display: inline-block;
+    width: 45%;
+    margin: 5px 2%;
+    padding: 14px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+body.page-kindle .btn-primary {
+    background: #22c55e;
+    color: white;
+}
+
+body.page-kindle .btn-secondary {
+    background: #ccc;
+    color: #1a1a1a;
+}
+
+/* -- Promotion overlay -- */
+body.page-kindle .promotion-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+}
+
+body.page-kindle .promotion-overlay.show {
+    display: block;
+}
+
+body.page-kindle .promotion-dialog {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    -moz-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    -o-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    min-width: 300px;
+}
+
+body.page-kindle .promotion-dialog h3 {
+    color: #22c55e;
+    margin-bottom: 15px;
+    font-size: 20px;
+}
+
+body.page-kindle .promotion-piece {
+    display: inline-block;
+    width: 70px;
+    height: 70px;
+    margin: 5px;
+    font-size: 50px;
+    cursor: pointer;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background: #f8f9fa;
+    line-height: 70px;
+}
