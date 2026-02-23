@@ -199,6 +199,10 @@
                 setupView.style.display = 'none';
                 gameView.style.display = 'block';
                 isGameStarted = true;
+                // Only load local Stockfish engine when explicitly selected
+                if (selectedEngine === 'local') {
+                    initStockfish();
+                }
                 resetGame();
             };
         }
@@ -360,6 +364,12 @@
                     if (piece) {
                         var img = document.createElement('img');
                         img.src = pieces[piece.color + piece.type];
+                        // Rotate black pieces 180° for across-the-board view
+                        if (piece.color === 'b') {
+                            img.className = 'black-piece';
+                            img.style.transform = 'rotate(180deg)';
+                            img.style.webkitTransform = 'rotate(180deg)';
+                        }
                         td.appendChild(img);
                     }
 
@@ -437,23 +447,26 @@
             choices.innerHTML = '';
             var types = ['q', 'r', 'b', 'n'];
 
-            types.forEach(function (t) {
+            for (var ti = 0; ti < types.length; ti++) {
+                var t = types[ti];
                 var btn = document.createElement('div');
                 btn.className = 'promotion-piece';
                 var img = document.createElement('img');
                 img.src = pieces[playerColor + t];
                 img.style.width = '80%'; img.style.marginTop = '10%';
                 btn.appendChild(img);
-                btn.onclick = function () {
-                    game.move({ from: pendingPromotion.from, to: pendingPromotion.to, promotion: t });
-                    overlay.classList.remove('show');
-                    pendingPromotion = null;
-                    selectedSquare = null;
-                    renderBoard();
-                    checkGameEnd();
-                };
+                btn.onclick = (function (pt) {
+                    return function () {
+                        game.move({ from: pendingPromotion.from, to: pendingPromotion.to, promotion: pt });
+                        overlay.classList.remove('show');
+                        pendingPromotion = null;
+                        selectedSquare = null;
+                        renderBoard();
+                        checkGameEnd();
+                    };
+                })(t);
                 choices.appendChild(btn);
-            });
+            }
             overlay.classList.add('show');
         }
 
@@ -503,8 +516,8 @@
         // Initialize setup menu
         initSetupMenu();
 
-        // Start
-        initStockfish();
+        // Local Stockfish init is now deferred to startBtn.onclick
+        // Cloud engines (chessapi, lichess, supabase) need no local init
 
         // SW
         if ('serviceWorker' in navigator && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) navigator.serviceWorker.register('sw.js').then(function (reg) { console.log('ServiceWorker registration successful with scope: ', reg.scope); }).catch(function (err) { console.warn('ServiceWorker registration failed:', err); });

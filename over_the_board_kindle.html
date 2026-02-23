@@ -127,7 +127,9 @@
 
                         if (piece.color === 'b') {
                             img.className = 'black-piece';
-                            // Inline rotation for OTB mode (180 deg)
+                            // Inline rotation for OTB mode (180 deg) — Kindle fallback
+                            img.style.transform = 'rotate(180deg)';
+                            img.style.webkitTransform = 'rotate(180deg)';
                         }
                         td.appendChild(img);
                         // Add to cell
