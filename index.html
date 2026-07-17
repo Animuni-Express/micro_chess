@@ -1,87 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#22c55e">
-            <meta name="google-site-verification" content="0xOMwKR3f4Yp5CE543fQ29XkV8N-bpCC8yI622ag3yU" />
+    <meta name="google-site-verification" content="0xOMwKR3f4Yp5CE543fQ29XkV8N-bpCC8yI622ag3yU" />
+    <meta name="description" content="Play chess online - Over the board and against Stockfish AI">
     <title>Micro Chess - Play Chess Online</title>
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>♟️</text></svg>">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
 </head>
-
 <body>
     <div class="container">
-        <!-- ========== HEADER SECTION ========== -->
         <div class="header">
             <h1>Micro Chess</h1>
             <p class="tagline">The Ultimate Minimalist Chess Experience</p>
         </div>
 
-        <!-- ========== OVER THE BOARD CARD ========== -->
-        <div class="card green" onclick="location.href='over_the_board.html'">
+        <a href="over_the_board.html" class="card green">
             <h2>Over The Board</h2>
             <p>Play With a friend in a</p>
             <p>Virtual ChessBoard</p>
-        </div>
+        </a>
 
-        <!-- ========== STOCKFISH CARD ========== -->
-        <div class="card green" onclick="location.href='stockfish.html'">
+        <a href="stockfish.html" class="card green">
             <h2>Play With Stockfish</h2>
             <p>Play with the Worlds Best Chess AI</p>
             <p class="status">Beta • Offline Ready</p>
-        </div>
+        </a>
 
-        <!-- ========== MULTIPLAYER CARD ========== -->
-        <div class="card red disabled">
-            <h2>Multiplayer</h2>
-            <p>Play with people and friends</p>
-            <p class="status">Coming Soon</p>
-        </div>
-
-        <!-- ========== FOOTER SECTION ========== -->
         <div class="footer">
-            <p onclick="location.href='about.html'">About Micro Chess by Aniket Shenoy</p>
+            <a href="about.html" style="text-decoration: none; color: inherit;">About Micro Chess by Aniket Shenoy</a>
         </div>
     </div>
 
-    <!-- ========== SUPABASE SDK ========== -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase_client.js"></script>
-
-    <!-- ========== JAVASCRIPT ========== -->
     <script>
-        // Prevent clicking on disabled cards
-        document.querySelectorAll('.card.disabled').forEach(card => {
-            card.onclick = (e) => {
-                e.preventDefault();
-                return false;
-            };
-        });
-
-        // Verify Supabase Initialization
-        window.addEventListener('load', () => {
-            if (typeof getSupabase === 'function') {
-                const supabase = getSupabase();
-                if (supabase) {
-                    console.log('Supabase is ready on Home page!');
-                }
-            } else {
-                console.error('getSupabase function not found!');
-            }
-        });
-    </script>
-    <script>
-        if ('serviceWorker' in navigator && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
-            navigator.serviceWorker.register('sw.js').then(reg => {
-                console.log('ServiceWorker registration successful with scope: ', reg.scope);
-            }).catch(err => {
-                console.warn('ServiceWorker registration failed:', err);
-            });
-        }
+      var isLocalDev = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(window.location.hostname);
+      if ('serviceWorker' in navigator && window.location.protocol.startsWith('http') && !isLocalDev) {
+        navigator.serviceWorker.register('sw.js').catch(function () {});
+      }
     </script>
 </body>
+<<<<<<< HEAD
 
+=======
+>>>>>>> 172de2a (Migrate to Preact component architecture; fix Kindle AI freeze and PWA install)
 </html>

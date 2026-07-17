@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/chess/otb", "destination": "/over_the_board.html" },
+    { "source": "/chess/stockfish", "destination": "/stockfish.html" },
+    { "source": "/chess", "destination": "/over_the_board.html" }
+  ]
+}
