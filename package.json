@@ -5,7 +5,7 @@
   "scripts": {
     "build": "npm run build:main && npm run build:kindle",
     "build:main": "esbuild src/main.jsx --bundle --outfile=public/bundle.js --format=iife --target=es2017 --jsx=automatic --jsx-import-source=preact --minify",
-    "build:kindle": "esbuild src/kindle/main-kindle.jsx --bundle --outfile=public/bundle-kindle.js --format=iife --target=es2017 --jsx=automatic --jsx-import-source=preact --minify",
+    "build:kindle": "esbuild src/kindle/main-kindle.jsx --bundle --outfile=public/bundle-kindle.js --format=iife --target=es2015 --jsx=automatic --jsx-import-source=preact --minify",
     "dev": "esbuild src/main.jsx --bundle --outfile=public/bundle.js --format=iife --target=es2017 --jsx=automatic --jsx-import-source=preact --watch --servedir=.",
     "start": "npm run build && serve .",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"

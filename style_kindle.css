@@ -5,23 +5,11 @@
   box-sizing: border-box;
 }
 
-:root {
-  --primary: #000000;
-  --bg: #ffffff;
-  --board-light: #ffffff;
-  --board-dark: #000000;
-  --highlight: #000000;
-  --text-dark: #000000;
-  --text-gray: #333333;
-  --valid-move: #555555;
-  --check-highlight: #aa0000;
-}
-
 body {
   margin: 0;
   font-family: 'Georgia', 'Times New Roman', serif;
-  background: var(--bg);
-  color: var(--text-dark);
+  background: #ffffff;
+  color: #000000;
   font-size: 18px;
   line-height: 1.6;
 }
@@ -35,24 +23,24 @@ button {
   font-family: inherit;
   font-size: 18px;
   cursor: pointer;
-  border: 3px solid var(--text-dark);
-  background: var(--bg);
-  color: var(--text-dark);
+  border: 3px solid #000000;
+  background: #ffffff;
+  color: #000000;
   padding: 10px 24px;
   border-radius: 0;
   font-weight: bold;
 }
 
 button:active {
-  background: var(--text-dark);
-  color: var(--bg);
+  background: #000000;
+  color: #ffffff;
 }
 
 .back-button {
   display: inline-block;
   margin: 10px;
   padding: 8px 16px;
-  border: 2px solid var(--text-dark);
+  border: 2px solid #000000;
   font-size: 16px;
   font-weight: bold;
 }
@@ -60,7 +48,7 @@ button:active {
 .compat-badge {
   display: inline-block;
   padding: 4px 10px;
-  border: 2px solid var(--text-dark);
+  border: 2px solid #000000;
   margin: 6px 10px;
   font-size: 14px;
 }
@@ -82,7 +70,7 @@ h1 {
   font-size: 20px;
   font-weight: bold;
   padding: 10px;
-  border: 2px solid var(--text-dark);
+  border: 2px solid #000000;
   margin: 0 8px 12px;
 }
 
@@ -96,7 +84,7 @@ h1 {
   border-collapse: collapse;
   user-select: none;
   -webkit-user-select: none;
-  border: 3px solid var(--text-dark);
+  border: 3px solid #000000;
 }
 
 .board td {
@@ -117,31 +105,31 @@ h1 {
 }
 
 .board td.light {
-  background: var(--board-light);
-  border: 1px solid var(--text-dark);
+  background: #ffffff;
+  border: 1px solid #000000;
 }
 
 .board td.dark {
-  background: var(--board-dark);
-  border: 1px solid var(--text-dark);
+  background: #000000;
+  border: 1px solid #000000;
 }
 
 .board td.selected {
-  outline: 5px solid var(--text-dark);
+  outline: 5px solid #000000;
   outline-offset: -5px;
   z-index: 1;
   position: relative;
 }
 
 .board td.valid-move {
-  outline: 4px solid var(--text-dark);
+  outline: 4px solid #000000;
   outline-offset: -4px;
   z-index: 1;
   position: relative;
 }
 
 .board td.check-highlight {
-  outline: 5px dashed var(--check-highlight);
+  outline: 5px dashed #aa0000;
   outline-offset: -5px;
   z-index: 2;
   position: relative;
@@ -158,14 +146,14 @@ h1 {
   font-weight: bold;
   padding: 12px;
   margin: 12px 0;
-  border: 3px solid var(--text-dark);
+  border: 3px solid #000000;
 }
 
 .setup-view {
   max-width: 400px;
   margin: 0 auto;
   padding: 20px;
-  border: 3px solid var(--text-dark);
+  border: 3px solid #000000;
 }
 
 .setup-option {
@@ -189,7 +177,7 @@ h1 {
 .setup-option input[type='range'] {
   font-size: 18px;
   padding: 4px;
-  border: 2px solid var(--text-dark);
+  border: 2px solid #000000;
   width: 100%;
 }
 
@@ -223,7 +211,7 @@ h1 {
 }
 
 .promotion-dialog {
-  border: 3px solid var(--text-dark);
+  border: 3px solid #000000;
   padding: 24px;
   text-align: center;
 }
@@ -238,7 +226,7 @@ h1 {
   width: 60px;
   height: 60px;
   cursor: pointer;
-  border: 3px solid var(--text-dark);
+  border: 3px solid #000000;
   margin: 6px;
   padding: 4px;
 }
