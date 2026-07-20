@@ -25,32 +25,36 @@ export function Board({ position, selectedSquare, validMoves, turn, inCheck, fli
 
   return (
     <table id="board" className="board">
-      {rows.map((row) => (
-        <tr key={row}>
-          {cols.map((col) => {
-            const sq = squareName(row, col);
-            const piece = position[row][col];
-            const classes = [(row + col) % 2 === 0 ? 'light' : 'dark'];
-            if (validTargets.has(sq)) classes.push('valid-move');
-            if (sq === selectedSquare) classes.push('selected');
-            if (sq === checkSquare) classes.push('check-highlight');
+      <tbody>
+        {rows.map((row) => (
+          <tr key={row}>
+            {cols.map((col) => {
+              const sq = squareName(row, col);
+              const piece = position[row][col];
+              const classes = [(row + col) % 2 === 0 ? 'light' : 'dark'];
+              if (validTargets.has(sq)) classes.push('valid-move');
+              if (sq === selectedSquare) classes.push('selected');
+              if (sq === checkSquare) classes.push('check-highlight');
 
-            return (
-              <td key={sq} className={classes.join(' ')} data-square={sq} onClick={() => onSquareClick(sq)}>
-                {piece && (
-                  <img
-                    src={pieceIcon(piece.color, piece.type)}
-                    alt={(piece.color === 'w' ? 'White' : 'Black') + piece.type.toUpperCase()}
-                    draggable={false}
-                    className={rotatePieces && piece.color === 'b' ? 'black-piece' : undefined}
-                    style={rotatePieces && piece.color === 'b' ? { transform: 'rotate(180deg)' } : undefined}
-                  />
-                )}
-              </td>
-            );
-          })}
-        </tr>
-      ))}
+              return (
+                <td key={sq} className={classes.join(' ')} data-square={sq} onClick={() => onSquareClick(sq)}>
+                  {piece && (
+                    <img
+                      src={pieceIcon(piece.color, piece.type)}
+                      alt={(piece.color === 'w' ? 'White' : 'Black') + piece.type.toUpperCase()}
+                      draggable={false}
+                      // Rotation itself lives in CSS (.black-piece) so the
+                      // Kindle stylesheet can add the -webkit-transform old
+                      // WebKit needs; an inline `transform` can't be prefixed.
+                      className={rotatePieces && piece.color === 'b' ? 'black-piece' : undefined}
+                    />
+                  )}
+                </td>
+              );
+            })}
+          </tr>
+        ))}
+      </tbody>
     </table>
   );
 }

@@ -4,16 +4,19 @@
   "description": "Lightweight chess PWA — over-the-board & vs Stockfish",
   "scripts": {
     "build": "npm run build:main && npm run build:kindle",
-    "build:main": "esbuild src/main.jsx --bundle --outfile=public/bundle.js --format=iife --target=es2017 --jsx=automatic --jsx-import-source=preact --minify",
-    "build:kindle": "esbuild src/kindle/main-kindle.jsx --bundle --outfile=public/bundle-kindle.js --format=iife --target=es2015 --jsx=automatic --jsx-import-source=preact --minify",
-    "dev": "esbuild src/main.jsx --bundle --outfile=public/bundle.js --format=iife --target=es2017 --jsx=automatic --jsx-import-source=preact --watch --servedir=.",
+    "build:main": "esbuild ./src/main.jsx --bundle --outfile=public/bundle.js --format=iife --target=es2017 --jsx=automatic --jsx-import-source=preact --minify",
+    "build:kindle": "node scripts/build-kindle.mjs",
+    "dev": "esbuild ./src/main.jsx --bundle --outfile=public/bundle.js --format=iife --target=es2017 --jsx=automatic --jsx-import-source=preact --watch --servedir=.",
     "start": "npm run build && serve .",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
   "devDependencies": {
+    "@babel/core": "^8.0.1",
+    "@babel/preset-env": "^8.0.2",
     "@types/jest": "^29.5.0",
     "esbuild": "^0.28.0",
     "jest": "^29.7.0",
+    "playwright": "^1.61.1",
     "serve": "^14.2.6"
   },
   "dependencies": {

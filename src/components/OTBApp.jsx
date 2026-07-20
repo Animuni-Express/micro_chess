@@ -24,11 +24,12 @@ export function OTBApp() {
         }
         return;
       }
-      if (clicked && clicked.color === turn) {
-        selectSquare(square);
-        rerender();
-      } else if (square === selection.selectedSquare) {
+      if (square === selection.selectedSquare) {
+        // must precede the own-piece branch, which would otherwise re-select
         clearSelection();
+        rerender();
+      } else if (clicked && clicked.color === turn) {
+        selectSquare(square);
         rerender();
       } else if (isPromotion(selection.selectedSquare, square)) {
         setPending({ from: selection.selectedSquare, to: square, color: turn });

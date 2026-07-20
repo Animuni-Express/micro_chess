@@ -577,6 +577,31 @@ body {
     background: var(--primary-dark);
 }
 
+/* ========== ONLINE MULTIPLAYER ========== */
+.online-lobby { max-width: 460px; }
+.online-help, .online-message { color: var(--text-gray); text-align: center; line-height: 1.4; margin: -8px 0 20px; }
+.online-message { color: var(--red-dark); margin: 14px 0 0; }
+.room-join { display: flex; gap: 10px; margin-top: 14px; }
+.room-join input { min-width: 0; flex: 1; border: 2px solid #ddd; border-radius: 8px; padding: 11px; font-size: 16px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+.room-join .btn { flex: 0 0 auto; }
+.online-divider { border-top: 1px solid #ddd; margin: 24px 0; text-align: center; }
+.online-divider span { background: white; color: var(--text-light); display: inline-block; padding: 0 10px; position: relative; top: -10px; font-size: 12px; font-weight: 700; }
+.online-match-button { display: block; width: 100%; }
+.queue-status { text-align: center; }
+.queue-status p { margin-bottom: 12px; color: var(--text-gray); }
+.online-meta { color: var(--text-light); display: flex; justify-content: center; gap: 10px; font-size: 13px; }
+.connection { color: #64748b; text-transform: capitalize; }
+.connection.connected { color: var(--primary-dark); }
+.connection.reconnecting { color: #d97706; }
+.share-room, .draw-offer { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; color: var(--text-dark); display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 12px; padding: 10px; font-size: 14px; }
+.share-room .btn, .draw-offer .btn { flex: 0 0 auto; padding: 8px 10px; }
+.draw-offer { flex-wrap: wrap; justify-content: center; margin-top: 12px; }
+.clock { align-items: center; background: #f8f9fa; border: 1px solid #e5e7eb; border-radius: 8px; display: flex; justify-content: space-between; margin: 8px auto; max-width: 448px; padding: 8px 12px; }
+.clock.active { border-color: var(--primary); box-shadow: 0 0 0 2px #dcfce7; }
+.clock span { color: var(--text-gray); font-size: 13px; }
+.clock strong { font-variant-numeric: tabular-nums; font-size: 20px; }
+@media (max-width: 480px) { .room-join { flex-wrap: wrap; } .room-join .btn { flex: 1; } .share-room { flex-wrap: wrap; justify-content: center; } }
+
 /* ========== INDEX PAGE SPECIFIC ========== */
 .card {
     padding: 30px 40px;

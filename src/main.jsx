@@ -1,11 +1,14 @@
 import { render } from 'preact';
 import { OTBApp } from './components/OTBApp';
 import { StockfishApp } from './components/StockfishApp';
+import { OnlineGameApp } from './components/OnlineGameApp';
 
 const mount = document.getElementById('app');
 if (mount) {
-  const isStockfish = window.location.pathname.includes('stockfish');
-  render(isStockfish ? <StockfishApp /> : <OTBApp />, mount);
+  const path = window.location.pathname;
+  const isStockfish = path.includes('stockfish');
+  const isOnline = path.includes('online');
+  render(isOnline ? <OnlineGameApp /> : isStockfish ? <StockfishApp /> : <OTBApp />, mount);
 }
 
 // Skip on localhost — a stuck/updating SW during active development causes

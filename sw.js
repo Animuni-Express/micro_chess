@@ -1,9 +1,10 @@
-const CACHE_NAME = 'micro-chess-v6';
+const CACHE_NAME = 'micro-chess-v8';
 const PRECACHE_URLS = [
   '/',
   '/index.html',
   '/over_the_board.html',
   '/stockfish.html',
+  '/online.html',
   '/over_the_board_kindle.html',
   '/stockfish_kindle.html',
   '/about.html',

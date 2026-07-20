@@ -29,7 +29,9 @@ export function KindleStockfishApp() {
   const selection = getSelection();
   const turn = game.turn();
 
-  const makeEngineMove = useCallback(async () => {
+  // Promise chains, not async/await: the Kindle bundle targets ES5 and
+  // esbuild cannot lower the generators that async functions compile to.
+  const makeEngineMove = useCallback(() => {
     // Always re-fetch the live game — `game` from the enclosing render can be
     // stale here (this callback is memoized on [engine, aiLevel], which don't
     // change across a newGame() reset, but the module-level instance does).
@@ -38,38 +40,41 @@ export function KindleStockfishApp() {
     thinking.current = true;
     setStatus('🤖 AI thinking…');
 
-    let move = null;
-    try {
-      if (engine === 'local') {
-        if (!isLocalStockfishReady()) {
-          thinking.current = false;
-          setTimeout(makeEngineMove, 400);
-          return;
-        }
-        requestLocalMove(game.fen(), aiLevel);
-        return; // resolves via onMove callback wired in initLocalStockfish
-      } else if (engine === 'chessapi') {
-        move = await requestChessApiMove(game.fen(), aiLevel);
-      } else if (engine === 'lichess') {
-        move = await requestLichessMove(game.fen());
-      } else if (engine === 'supabase') {
-        await loadScriptOnce('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
-        await loadScriptOnce('js/supabase_client.js');
-        move = await requestSupabaseMove(game.fen(), Math.min(aiLevel, 15));
+    const applyMove = (move) => {
+      thinking.current = false;
+      if (move) {
+        makeMove(move.substring(0, 2), move.substring(2, 4), move.length > 4 ? move.substring(4, 5) : undefined);
+      } else {
+        const fb = fallbackMove(game);
+        if (fb) makeMove(fb.from, fb.to, fb.promotion);
       }
-    } catch {
-      move = null;
+      setStatus('');
+      rerender();
+    };
+
+    if (engine === 'local') {
+      if (!isLocalStockfishReady()) {
+        thinking.current = false;
+        setTimeout(makeEngineMove, 400);
+        return;
+      }
+      requestLocalMove(game.fen(), aiLevel);
+      return; // resolves via onMove callback wired in initLocalStockfish
     }
 
-    thinking.current = false;
-    if (move) {
-      makeMove(move.substring(0, 2), move.substring(2, 4), move.length > 4 ? move.substring(4, 5) : undefined);
+    let request;
+    if (engine === 'chessapi') {
+      request = requestChessApiMove(game.fen(), aiLevel);
+    } else if (engine === 'lichess') {
+      request = requestLichessMove(game.fen());
+    } else if (engine === 'supabase') {
+      request = loadScriptOnce('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2')
+        .then(() => loadScriptOnce('js/supabase_client.js'))
+        .then(() => requestSupabaseMove(game.fen(), Math.min(aiLevel, 15)));
     } else {
-      const fb = fallbackMove(game);
-      if (fb) makeMove(fb.from, fb.to, fb.promotion);
+      request = Promise.resolve(null);
     }
-    setStatus('');
-    rerender();
+    request.then(applyMove, () => applyMove(null));
   }, [engine, aiLevel]);
 
   useEffect(() => {
@@ -89,11 +94,12 @@ export function KindleStockfishApp() {
         }
         return;
       }
-      if (clicked && clicked.color === turn) {
-        selectSquare(square);
-        rerender();
-      } else if (square === selection.selectedSquare) {
+      if (square === selection.selectedSquare) {
+        // must precede the own-piece branch, which would otherwise re-select
         clearSelection();
+        rerender();
+      } else if (clicked && clicked.color === turn) {
+        selectSquare(square);
         rerender();
       } else if (isPromotion(selection.selectedSquare, square)) {
         setPending({ from: selection.selectedSquare, to: square, color: turn });

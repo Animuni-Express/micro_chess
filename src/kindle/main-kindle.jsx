@@ -1,3 +1,6 @@
+// Polyfills MUST load before Preact: Preact captures `typeof Promise` at
+// module-init time for its render scheduler.
+import './polyfills';
 import { render } from 'preact';
 import { KindleOTBApp } from './KindleOTBApp';
 import { KindleStockfishApp } from './KindleStockfishApp';
