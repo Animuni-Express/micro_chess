@@ -57,7 +57,22 @@ export async function multiplayer(action, payload = {}) {
   const { data, error } = await client.functions.invoke('multiplayer', {
     body: { action, ...guestIdentity(), ...payload },
   });
-  if (error) throw new Error(error.message || 'Multiplayer request failed');
+  if (error) {
+    // supabase-js wraps any non-2xx response in a FunctionsHttpError whose
+    // `.message` is the useless generic "Edge Function returned a non-2xx
+    // status code". The Edge Function's real message lives in the JSON body of
+    // the response it attaches as `.context`, so surface that when present.
+    let message = error.message || 'Multiplayer request failed';
+    try {
+      if (error.context && typeof error.context.json === 'function') {
+        const body = await error.context.json();
+        if (body?.error) message = body.error;
+      }
+    } catch (_) {
+      // fall back to the generic message
+    }
+    throw new Error(message);
+  }
   if (data?.error) throw new Error(data.error);
   return data;
 }

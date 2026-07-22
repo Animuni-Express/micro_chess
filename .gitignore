@@ -4,3 +4,7 @@ supabase/.temp/
 Thumbs.db
 .claude/
 output/
+
+# Accidentally-committed platform binaries (Supabase CLI, etc.)
+*.exe
+supabase.exe
