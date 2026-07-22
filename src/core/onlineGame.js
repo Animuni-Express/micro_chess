@@ -2,8 +2,11 @@ import { Chess } from 'chess.js';
 
 export const STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
-export function createOnlineGame(fen = STARTING_FEN) {
-  return new Chess(fen);
+// `|| STARTING_FEN` rather than a default parameter: callers pass a FEN read off
+// a possibly-absent game object, which can arrive as null (not undefined), and a
+// default parameter would not catch that — chess.js then throws on fen.split().
+export function createOnlineGame(fen) {
+  return new Chess(fen || STARTING_FEN);
 }
 
 export function movePayload(game, from, to, promotion) {

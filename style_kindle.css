@@ -110,8 +110,13 @@ h1 {
   border: 1px solid #000000;
 }
 
+/* Mid-gray, NOT pure black: the black piece SVGs are fill+stroke #000000 with
+   no light outline, so on a pure-black square they were completely invisible.
+   0x99 is an exact step on the 16-level e-ink grayscale, so it renders as a
+   true gray rather than a dither pattern, and stays clearly distinct from both
+   the black pieces and the white (#ffffff) light squares. */
 .board td.dark {
-  background: #000000;
+  background: #999999;
   border: 1px solid #000000;
 }
 
@@ -240,4 +245,134 @@ h1 {
 .promotion-piece img {
   width: 100%;
   height: 100%;
+}
+
+/* ===== Online Multiplayer ===== */
+.online-lobby {
+  max-width: 420px;
+}
+
+.online-help,
+.online-message {
+  text-align: center;
+  margin: 0 0 16px;
+}
+
+.online-message {
+  border: 2px solid #000000;
+  padding: 8px;
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+
+.room-join {
+  margin-top: 16px;
+}
+
+.room-join input {
+  display: block;
+  width: 100%;
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 10px;
+  border: 2px solid #000000;
+  margin-bottom: 8px;
+}
+
+.room-join .btn {
+  display: block;
+  width: 100%;
+}
+
+.online-divider {
+  text-align: center;
+  border-top: 2px solid #000000;
+  margin: 20px 0;
+  padding-top: 12px;
+  font-weight: bold;
+}
+
+.online-match-button {
+  display: block;
+  width: 100%;
+}
+
+.queue-status {
+  text-align: center;
+}
+
+.queue-status p {
+  margin-bottom: 12px;
+}
+
+.header {
+  margin-bottom: 8px;
+}
+
+.online-meta {
+  text-align: center;
+  margin-bottom: 8px;
+  font-size: 16px;
+}
+
+.online-meta span {
+  display: inline-block;
+  margin: 0 6px;
+}
+
+.connection {
+  font-weight: bold;
+  text-transform: capitalize;
+}
+
+.share-room {
+  border: 2px solid #000000;
+  padding: 10px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.share-room strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.clock {
+  border: 2px solid #000000;
+  padding: 8px 12px;
+  margin: 8px auto;
+  max-width: 400px;
+  text-align: center;
+}
+
+.clock.active {
+  border-width: 4px;
+}
+
+.clock span {
+  display: block;
+  font-size: 14px;
+}
+
+.clock strong {
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
+
+.draw-offer {
+  border: 2px solid #000000;
+  padding: 10px;
+  margin-top: 12px;
+  text-align: center;
+}
+
+.draw-offer .btn {
+  margin: 8px 6px 0;
+}
+
+.controls {
+  text-align: center;
+  margin-top: 12px;
 }

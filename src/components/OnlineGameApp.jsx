@@ -94,8 +94,10 @@ export function OnlineGameApp() {
     const timer = window.setInterval(() => refreshGame(gameId), 5000);
     subscribeToGame(gameId, (payload) => {
       if (cancelled || !payload?.game) return;
+      // Broadcasts are shared to both players, so the payload never carries a
+      // player-specific color — only `refreshGame`/`openGame` (each scoped to
+      // the requesting player via the Edge Function) may set playerColor.
       setGame(payload.game);
-      setPlayerColor(payload.playerColor || null);
       setConnection('connected');
       setSelectedSquare(null);
       setPendingPromotion(null);

@@ -2,8 +2,8 @@
  * Supabase Client Configuration
  */
 
-const SUPABASE_URL = 'https://iupbboutzhnyqfwfnajf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1cGJib3V0emhueXFmd2ZuYWpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzNzE3NjAsImV4cCI6MjA4NTk0Nzc2MH0.r9JZhTAknT6uOtSJeXLkaMeQwl_bZ0otUy3o9WmEiZ8';
+const SUPABASE_URL = 'https://ncsqidwsimmdbkoiidlz.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jc3FpZHdzaW1tZGJrb2lpZGx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1NTM5MDEsImV4cCI6MjEwMDEyOTkwMX0.PB5aBxvZ2bqNLxGrehobWj48xZ1AzWBRPUjsO1-M7Ec';
 
 // Note: The Supabase SDK is loaded via CDN in index.html
 // This will initialize the client once the SDK is available

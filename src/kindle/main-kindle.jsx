@@ -4,11 +4,14 @@ import './polyfills';
 import { render } from 'preact';
 import { KindleOTBApp } from './KindleOTBApp';
 import { KindleStockfishApp } from './KindleStockfishApp';
+import { KindleOnlineGameApp } from './KindleOnlineGameApp';
 
 const mount = document.getElementById('app');
 if (mount) {
-  const isStockfish = window.location.pathname.includes('stockfish');
-  render(isStockfish ? <KindleStockfishApp /> : <KindleOTBApp />, mount);
+  const path = window.location.pathname;
+  const isOnline = path.includes('online');
+  const isStockfish = path.includes('stockfish');
+  render(isOnline ? <KindleOnlineGameApp /> : isStockfish ? <KindleStockfishApp /> : <KindleOTBApp />, mount);
 }
 
 // Skip on localhost — a stuck/updating SW during active development causes
