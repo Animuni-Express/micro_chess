@@ -59,6 +59,13 @@ export function OnlineGameApp() {
   const [timeControl, setTimeControl] = useState(300);
   const [queueing, setQueueing] = useState(false);
   const unsubscribe = useRef(null);
+  // Mirrors `playerColor` without becoming a dependency of refreshGame (which
+  // must stay stable across polls) — lets the catch block below tell whether
+  // we've ever been recognized as a seated player in this game.
+  const playerColorRef = useRef(null);
+  useEffect(() => {
+    playerColorRef.current = playerColor;
+  }, [playerColor]);
 
   const chess = useMemo(() => createOnlineGame(game?.current_fen), [game?.current_fen]);
   const validMoves = selectedSquare ? chess.moves({ square: selectedSquare, verbose: true }) : [];
@@ -74,6 +81,28 @@ export function OnlineGameApp() {
       setSelectedSquare(null);
       setPendingPromotion(null);
     } catch (error) {
+      // A fresh guest opening a shared invite link (?game=<id>, from the
+      // COPY LINK button) isn't a recognized player yet, so get_game rejects
+      // them with "Game access denied". Only before we've ever been seated in
+      // this game do we treat that as "try to join" rather than a real error —
+      // otherwise a later transient denial (e.g. a cleared secret) would
+      // wrongly seat a stranger as the missing player.
+      if (playerColorRef.current === null && /access denied/i.test(error.message || '')) {
+        try {
+          const response = await multiplayer('join_by_id', { gameId: id });
+          setGame(response.game);
+          setPlayerColor(response.playerColor);
+          setConnection('connected');
+          setSelectedSquare(null);
+          setPendingPromotion(null);
+          setMessage('');
+          return;
+        } catch (joinError) {
+          setConnection('reconnecting');
+          setMessage(joinError.message);
+          return;
+        }
+      }
       setConnection('reconnecting');
       setMessage(error.message);
     }

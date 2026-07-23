@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { Board } from '../components/Board';
 import { PromotionDialog } from '../components/PromotionDialog';
 import { createOnlineGame, movePayload } from '../core/onlineGame';
@@ -60,6 +60,13 @@ export function KindleOnlineGameApp() {
   const [roomCode, setRoomCode] = useState('');
   const [timeControl, setTimeControl] = useState(300);
   const [queueing, setQueueing] = useState(false);
+  // Mirrors `playerColor` without becoming a dependency of refreshGame — lets
+  // the catch below tell whether we've ever been recognized as a seated
+  // player in this game (see refreshGame's catch for why that matters).
+  const playerColorRef = useRef(null);
+  useEffect(() => {
+    playerColorRef.current = playerColor;
+  }, [playerColor]);
 
   const chess = useMemo(() => createOnlineGame(game && game.current_fen), [game && game.current_fen]);
   const validMoves = selectedSquare ? chess.moves({ square: selectedSquare, verbose: true }) : [];
@@ -78,6 +85,26 @@ export function KindleOnlineGameApp() {
           setPendingPromotion(null);
         })
         .catch((error) => {
+          // A fresh guest opening a shared invite link (?game=<id>) isn't a
+          // recognized player yet, so get_game rejects them with "Game access
+          // denied". Only before we've ever been seated in this game do we
+          // treat that as "try to join" rather than a real error.
+          if (playerColorRef.current === null && /access denied/i.test(error.message || '')) {
+            multiplayer('join_by_id', { gameId: gid })
+              .then((response) => {
+                setGame(response.game);
+                setPlayerColor(response.playerColor);
+                setConnection('connected');
+                setSelectedSquare(null);
+                setPendingPromotion(null);
+                setMessage('');
+              })
+              .catch((joinError) => {
+                setConnection('reconnecting');
+                setMessage(joinError.message);
+              });
+            return;
+          }
           setConnection('reconnecting');
           setMessage(error.message);
         });

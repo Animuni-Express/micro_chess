@@ -11,14 +11,18 @@ The Supabase project is `ncsqidwsimmdbkoiidlz` (see `js/supabase_client.js`).
 
 ## 1. Deploy the database schema (required)
 
-This creates the `games`, `moves`, and `matchmaking_queue` tables plus the two
-RPCs the Edge Function calls.
+This creates the `games`, `moves`, and `matchmaking_queue` tables plus the RPCs
+the Edge Function calls. There are two migration files, applied in order —
+`supabase/migrations/` is sorted by filename/timestamp automatically.
 
 ### Option A — Supabase Dashboard (no CLI)
 1. Open the project → **SQL Editor** → **New query**.
 2. Paste the entire contents of
-   `supabase/migrations/20260718000000_multiplayer.sql`.
-3. Click **Run**. It should complete with no errors.
+   `supabase/migrations/20260718000000_multiplayer.sql`, then **Run**.
+3. New query again, paste
+   `supabase/migrations/20260723150000_join_by_game_id.sql`, then **Run**.
+   (Adds `join_multiplayer_game_by_id`, used when a second player opens a
+   shared invite link instead of typing the room code.)
 
 ### Option B — Supabase CLI
 ```bash
