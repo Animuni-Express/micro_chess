@@ -174,6 +174,21 @@ Deno.serve(async (request) => {
       return respond({ game: publicGame(result.game), playerColor: result.playerColor, serverNow: new Date().toISOString() });
     }
 
+    // The "COPY LINK" button shares a URL keyed by game id while the room is
+    // still 'waiting'. A fresh guest opening that link isn't a recognized
+    // player yet, so get_game alone would reject them — this seats them as
+    // the second player (or, if they're already seated, just returns the
+    // game), the same way join_room does for a typed room code.
+    if (body.action === 'join_by_id') {
+      const gameId = String(body.gameId || '');
+      const secretHash = await hash(identity.guestSecret);
+      const { data, error } = await admin.rpc('join_multiplayer_game_by_id', { p_game_id: gameId, p_guest_id: identity.guestId, p_secret_hash: secretHash });
+      if (error || !data) throw new Error(error?.message || 'Unable to join this game');
+      const result = await gameForPlayer(admin, identity, data);
+      await broadcastGame(admin, result.game);
+      return respond({ game: publicGame(result.game), playerColor: result.playerColor });
+    }
+
     if (body.action === 'join_matchmaking') {
       const timeControl = assertTimeControl(body.timeControl);
       const secretHash = await hash(identity.guestSecret);
