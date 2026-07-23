@@ -105,6 +105,15 @@ h1 {
   pointer-events: none;
 }
 
+/* Shown by Board's onError swap only when a piece SVG fails to render (e.g. an
+   e-ink browser without SVG-in-<img> support). Hidden otherwise. */
+.piece-fallback {
+  display: none;
+  font-size: 40px;
+  line-height: 1;
+  pointer-events: none;
+}
+
 .board td.light {
   background: #ffffff;
   border: 1px solid #000000;

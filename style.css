@@ -175,6 +175,16 @@ body {
     transform: rotate(180deg);
 }
 
+/* Shown by Board's onError swap only when a piece SVG fails to load. Normally
+   hidden — the SVG <img> is the primary render path on modern browsers. */
+.piece-fallback {
+    display: none;
+    font-size: 46px;
+    line-height: 1;
+    text-align: center;
+    pointer-events: none;
+}
+
 .board td.light {
     background: var(--light-sq);
 }

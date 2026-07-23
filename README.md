@@ -36,6 +36,8 @@ Since Micro Chess is built with standard web technologies, you can run it locall
 2. Open `index.html` in any modern web browser.
 3. For the best experience, host it using a simple local server (e.g., Python `http.server` or VS Code Live Server) to enable Service Worker functionality.
 
+Over-the-Board and Stockfish modes run entirely in the browser. **Online multiplayer** needs the Supabase backend deployed once — see [`DEPLOY.md`](DEPLOY.md). Until then, online play returns an error.
+
 ## 🌐 Open Source
 
 This project is open source. Feel free to explore the code, report bugs, or suggest features via the [GitHub Issues](https://github.com/Animuni-Express/micro_chess/issues) page.

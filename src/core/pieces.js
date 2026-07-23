@@ -18,3 +18,15 @@ export const PIECE_ICONS = {
 export function pieceIcon(color, type) {
   return PIECE_ICONS[color + type] || '';
 }
+
+// Unicode chess glyphs — the last-resort fallback for browsers that cannot
+// render SVG in <img> (some old Kindle e-ink experimental browsers). Text
+// glyphs render everywhere, so the board never shows broken images.
+export const PIECE_GLYPHS = {
+  wk: '♔', wq: '♕', wr: '♖', wb: '♗', wn: '♘', wp: '♙',
+  bk: '♚', bq: '♛', br: '♜', bb: '♝', bn: '♞', bp: '♟',
+};
+
+export function pieceGlyph(color, type) {
+  return PIECE_GLYPHS[color + type] || '';
+}

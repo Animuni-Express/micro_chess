@@ -1,4 +1,15 @@
-import { pieceIcon } from '../core/pieces';
+import { pieceIcon, pieceGlyph } from '../core/pieces';
+
+// If a piece SVG cannot be rendered (old Kindle e-ink browsers that don't
+// support SVG in <img>), hide the broken image and reveal the Unicode glyph
+// sibling so the square is never blank.
+function handlePieceImgError(event) {
+  const img = event.currentTarget;
+  img.style.display = 'none';
+  const parent = img.parentNode;
+  const fallback = parent && parent.querySelector('.piece-fallback');
+  if (fallback) fallback.style.display = 'inline-block';
+}
 
 function squareName(row, col) {
   return String.fromCharCode(97 + col) + (8 - row);
@@ -43,11 +54,20 @@ export function Board({ position, selectedSquare, validMoves, turn, inCheck, fli
                       src={pieceIcon(piece.color, piece.type)}
                       alt={(piece.color === 'w' ? 'White' : 'Black') + piece.type.toUpperCase()}
                       draggable={false}
+                      onError={handlePieceImgError}
                       // Rotation itself lives in CSS (.black-piece) so the
                       // Kindle stylesheet can add the -webkit-transform old
                       // WebKit needs; an inline `transform` can't be prefixed.
                       className={rotatePieces && piece.color === 'b' ? 'black-piece' : undefined}
                     />
+                  )}
+                  {piece && (
+                    <span
+                      className={'piece-fallback' + (rotatePieces && piece.color === 'b' ? ' black-piece' : '')}
+                      aria-hidden="true"
+                    >
+                      {pieceGlyph(piece.color, piece.type)}
+                    </span>
                   )}
                 </td>
               );

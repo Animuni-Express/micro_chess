@@ -51,6 +51,32 @@ if (!String.prototype.includes) {
     return this.indexOf(search, start || 0) !== -1;
   };
 }
+// padStart/padEnd (ES2017): the online clock formatter uses padStart, which
+// old Kindle WebKit lacks — without this the clock throws and blanks the game.
+if (!String.prototype.padStart) {
+  String.prototype.padStart = function (targetLength, padString) {
+    var str = String(this);
+    targetLength = targetLength >> 0;
+    padString = padString === undefined ? ' ' : String(padString);
+    if (str.length >= targetLength || padString === '') return str;
+    var pad = '';
+    var needed = targetLength - str.length;
+    while (pad.length < needed) pad += padString;
+    return pad.slice(0, needed) + str;
+  };
+}
+if (!String.prototype.padEnd) {
+  String.prototype.padEnd = function (targetLength, padString) {
+    var str = String(this);
+    targetLength = targetLength >> 0;
+    padString = padString === undefined ? ' ' : String(padString);
+    if (str.length >= targetLength || padString === '') return str;
+    var pad = '';
+    var needed = targetLength - str.length;
+    while (pad.length < needed) pad += padString;
+    return str + pad.slice(0, needed);
+  };
+}
 
 // --- Array.prototype.includes / find / findIndex, Array.from ---
 if (!Array.prototype.includes) {
