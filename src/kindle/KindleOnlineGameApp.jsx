@@ -14,14 +14,39 @@ function formatClock(milliseconds) {
   return String(Math.floor(seconds / 60)).padStart(2, '0') + ':' + String(seconds % 60).padStart(2, '0');
 }
 
+// Old Kindle WebKit has neither `URL` nor `URLSearchParams` (both post-ES5
+// browser APIs, not JS syntax, so Babel's ES5 lowering can't help); without
+// this the very first render throws and the whole page stays blank. Plain
+// string parsing/rebuilding avoids the dependency entirely.
 function pathGameId() {
-  return new URLSearchParams(window.location.search).get('game');
+  const match = /[?&]game=([^&]+)/.exec(window.location.search || '');
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+function urlWithGame(gameId) {
+  const href = window.location.href;
+  const hashIndex = href.indexOf('#');
+  const hash = hashIndex === -1 ? '' : href.slice(hashIndex);
+  const withoutHash = hashIndex === -1 ? href : href.slice(0, hashIndex);
+  const queryIndex = withoutHash.indexOf('?');
+  const base = queryIndex === -1 ? withoutHash : withoutHash.slice(0, queryIndex);
+  const query = queryIndex === -1 ? '' : withoutHash.slice(queryIndex + 1);
+  const pairs = query.length ? query.split('&') : [];
+  const encoded = 'game=' + encodeURIComponent(gameId);
+  let replaced = false;
+  for (let i = 0; i < pairs.length; i += 1) {
+    if (pairs[i].split('=')[0] === 'game') {
+      pairs[i] = encoded;
+      replaced = true;
+      break;
+    }
+  }
+  if (!replaced) pairs.push(encoded);
+  return base + '?' + pairs.join('&') + hash;
 }
 
 function setGameUrl(gameId) {
-  const url = new URL(window.location.href);
-  url.searchParams.set('game', gameId);
-  window.history.replaceState({}, '', url);
+  window.history.replaceState({}, '', urlWithGame(gameId));
 }
 
 function statusText(game, color) {
@@ -336,8 +361,7 @@ export function KindleOnlineGameApp() {
     );
   }
 
-  const shareUrl = new URL(window.location.href);
-  shareUrl.searchParams.set('game', gameId);
+  const shareUrl = urlWithGame(gameId);
   const isDrawOffer = game && game.draw_offer_by && game.draw_offer_by !== playerColor;
 
   return (
@@ -354,7 +378,7 @@ export function KindleOnlineGameApp() {
           <strong>Share room code: {game.room_code}</strong>
           <button
             className="btn btn-secondary"
-            onClick={() => navigator.clipboard && navigator.clipboard.writeText(shareUrl.href)}
+            onClick={() => navigator.clipboard && navigator.clipboard.writeText(shareUrl)}
           >
             COPY LINK
           </button>

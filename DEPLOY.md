@@ -12,7 +12,7 @@ The Supabase project is `ncsqidwsimmdbkoiidlz` (see `js/supabase_client.js`).
 ## 1. Deploy the database schema (required)
 
 This creates the `games`, `moves`, and `matchmaking_queue` tables plus the RPCs
-the Edge Function calls. There are two migration files, applied in order —
+the Edge Function calls. There are three migration files, applied in order —
 `supabase/migrations/` is sorted by filename/timestamp automatically.
 
 ### Option A — Supabase Dashboard (no CLI)
@@ -23,6 +23,10 @@ the Edge Function calls. There are two migration files, applied in order —
    `supabase/migrations/20260723150000_join_by_game_id.sql`, then **Run**.
    (Adds `join_multiplayer_game_by_id`, used when a second player opens a
    shared invite link instead of typing the room code.)
+4. New query again, paste
+   `supabase/migrations/20260723160000_fix_matchmaking_status.sql`, then **Run**.
+   (Fixes "Find a Match" sometimes surfacing a stale private room or old game
+   instead of the freshly matched opponent.)
 
 ### Option B — Supabase CLI
 ```bash

@@ -54,7 +54,7 @@ button:active {
 }
 
 .container {
-  max-width: 500px;
+  max-width: 560px;
   margin: 0 auto;
   padding: 16px;
 }
@@ -89,8 +89,8 @@ h1 {
 }
 
 .board td {
-  width: 56px;
-  height: 56px;
+  width: 64px;
+  height: 64px;
   cursor: pointer;
   padding: 0;
   position: relative;
@@ -99,8 +99,8 @@ h1 {
 }
 
 .board td img {
-  width: 44px;
-  height: 44px;
+  width: 52px;
+  height: 52px;
   object-fit: contain;
   pointer-events: none;
 }
@@ -109,7 +109,7 @@ h1 {
    e-ink browser without SVG-in-<img> support). Hidden otherwise. */
 .piece-fallback {
   display: none;
-  font-size: 40px;
+  font-size: 46px;
   line-height: 1;
   pointer-events: none;
 }

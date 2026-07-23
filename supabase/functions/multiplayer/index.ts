@@ -86,6 +86,20 @@ async function broadcastGame(admin: any, game: Game) {
   }
 }
 
+// broadcastGame subscribes a fresh Realtime channel from scratch on every
+// call, which can take up to 800ms to confirm. Awaiting that before
+// responding added up to 800ms of pure overhead to every move/action, on top
+// of physical network latency — the acting player was waiting on a broadcast
+// meant for their *opponent*. EdgeRuntime.waitUntil (Supabase/Deno Deploy's
+// background-task API) lets the response return immediately while the
+// broadcast still completes; broadcastGame already swallows its own errors,
+// so there is nothing here to catch.
+function fireBroadcast(admin: any, game: Game) {
+  const task = broadcastGame(admin, game);
+  const runtime = (globalThis as any).EdgeRuntime;
+  if (runtime?.waitUntil) runtime.waitUntil(task);
+}
+
 async function rawGame(admin: any, gameId: string) {
   const { data, error } = await admin.from('games').select('*').eq('id', gameId).maybeSingle();
   if (error || !data) throw new Error('Game not found');
@@ -134,14 +148,18 @@ async function makeRoom(admin: any, identity: Identity, timeControl: number) {
   throw new Error('Unable to generate a room code. Please try again.');
 }
 
+// Only ever reports a match that THIS queue attempt actually produced (via
+// queue_multiplayer_player setting matched_game_id on the row) — never any
+// other game the player happens to be seated in, such as a stale private room
+// still 'waiting' for a friend, or a previous active game. Looking up "any
+// game this guest is seated in" was the earlier (buggy) approach.
 async function matchedGameForPlayer(admin: any, identity: Identity) {
   const secretHash = await hash(identity.guestSecret);
-  const { data, error } = await admin.from('games').select('*').or(`white_player_id.eq.${identity.guestId},black_player_id.eq.${identity.guestId}`).in('status', ['active', 'waiting']).order('updated_at', { ascending: false }).limit(1);
+  const { data: row, error } = await admin.from('matchmaking_queue').select('*').eq('guest_id', identity.guestId).maybeSingle();
   if (error) throw new Error(error.message);
-  const game = (data || []).find((candidate: Game) => {
-    try { playerColor(candidate, identity.guestId, secretHash); return true; } catch (_) { return false; }
-  });
-  if (!game) return null;
+  if (!row || row.secret_hash !== secretHash || !row.matched_game_id) return null;
+  const game = await rawGame(admin, row.matched_game_id);
+  await admin.from('matchmaking_queue').delete().eq('guest_id', identity.guestId);
   return { game: publicGame(game), playerColor: playerColor(game, identity.guestId, secretHash), gameId: game.id };
 }
 
@@ -165,7 +183,7 @@ Deno.serve(async (request) => {
       const { data, error } = await admin.rpc('join_multiplayer_room', { p_room_code: code, p_guest_id: identity.guestId, p_secret_hash: secretHash });
       if (error || !data) throw new Error(error?.message || 'Unable to join room');
       const result = await gameForPlayer(admin, identity, data);
-      await broadcastGame(admin, result.game);
+      fireBroadcast(admin, result.game);
       return respond({ game: publicGame(result.game), playerColor: result.playerColor });
     }
 
@@ -185,7 +203,7 @@ Deno.serve(async (request) => {
       const { data, error } = await admin.rpc('join_multiplayer_game_by_id', { p_game_id: gameId, p_guest_id: identity.guestId, p_secret_hash: secretHash });
       if (error || !data) throw new Error(error?.message || 'Unable to join this game');
       const result = await gameForPlayer(admin, identity, data);
-      await broadcastGame(admin, result.game);
+      fireBroadcast(admin, result.game);
       return respond({ game: publicGame(result.game), playerColor: result.playerColor });
     }
 
@@ -196,7 +214,7 @@ Deno.serve(async (request) => {
       if (error) throw new Error(error.message);
       if (!data) return respond({ queued: true });
       const result = await gameForPlayer(admin, identity, data);
-      await broadcastGame(admin, result.game);
+      fireBroadcast(admin, result.game);
       return respond({ gameId: data, game: publicGame(result.game), playerColor: result.playerColor });
     }
 
@@ -219,7 +237,7 @@ Deno.serve(async (request) => {
       const remaining = clockRemaining(game, color);
       if (remaining <= 0) {
         const timedOut = await settleClock(admin, game);
-        await broadcastGame(admin, timedOut);
+        fireBroadcast(admin, timedOut);
         throw new Error('Your clock has expired');
       }
       const from = String(body.from || '');
@@ -242,7 +260,7 @@ Deno.serve(async (request) => {
       const { data: updated, error } = await admin.from('games').update(patch).eq('id', game.id).eq('position_version', expectedVersion).eq('status', 'active').select('*').maybeSingle();
       if (error || !updated) throw new Error('The board changed. Reloading the latest position.');
       await admin.from('moves').insert({ game_id: game.id, move_number: expectedVersion + 1, player_color: color, from_square: from, to_square: to, promotion: promotion || null, san: move.san, fen_after: chess.fen() });
-      await broadcastGame(admin, updated);
+      fireBroadcast(admin, updated);
       return respond({ game: publicGame(updated), playerColor: color });
     }
 
@@ -261,7 +279,7 @@ Deno.serve(async (request) => {
     }
     const { data: updated, error } = await admin.from('games').update(patch).eq('id', game.id).eq('position_version', game.position_version).select('*').maybeSingle();
     if (error || !updated) throw new Error(error?.message || 'Unable to update game');
-    await broadcastGame(admin, updated);
+    fireBroadcast(admin, updated);
     return respond({ game: publicGame(updated), playerColor: color });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Multiplayer request failed';
