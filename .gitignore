@@ -5,6 +5,13 @@ Thumbs.db
 .claude/
 output/
 
+# Secrets. The Lichess relay token lives in .env and must never be committed —
+# .env.example is the committed template. See DEPLOY.md.
+.env
+.env.*
+!.env.example
+supabase/.env
+
 # Accidentally-committed platform binaries (Supabase CLI, etc.)
 *.exe
 supabase.exe

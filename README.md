@@ -8,6 +8,7 @@ A professional-grade, lightweight, and 100% AI-generated chess platform. Micro C
 
 - **🤖 Stockfish AI:** Challenge one of the world's strongest engines with 20 levels of difficulty. Supports local and cloud-based engine evaluation.
 - **♟ Over The Board (OTB):** Play locally with a friend on the same device with a touch-responsive, beautiful interface.
+- **🌍 Real Opponents from Lichess:** Micro Chess seeks a game in the public [lichess.org](https://lichess.org) pool on your behalf and relays the moves, so you play a real human without a Lichess account, a login, or giving up your anonymity. Casual games only — see [`DEPLOY.md`](DEPLOY.md#3-lichess-opponents-play-a-lichess-player).
 - **📱 Kindle & E-Ink Optimized:** A dedicated high-contrast mode designed specifically for Kindle libraries and e-ink experimental browsers.
 - **⚡ Progressive Web App (PWA):** Install Micro Chess to your home screen and play 100% offline thanks to advanced Service Worker caching.
 - **♔ Smart Highlighting:** Visual indicators for valid moves and a pulsing check highlight to keep the game state clear.

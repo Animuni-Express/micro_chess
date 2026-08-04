@@ -1,4 +1,4 @@
-const CACHE_NAME = 'micro-chess-v10';
+const CACHE_NAME = 'micro-chess-v11';
 const PRECACHE_URLS = [
   '/',
   '/index.html',

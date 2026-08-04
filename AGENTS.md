@@ -25,8 +25,13 @@ npm run build  # Minify and bundle JS
 
 ### Testing
 ```bash
-npm test       # Placeholder - no real tests configured
+npm test       # jest; specs live in tests/*.test.js
 ```
+Sources are transformed for jest by esbuild (`tests/esbuild-transformer.cjs`), so
+tests can import the app's ESM/JSX modules and the Edge Function's plain-JS
+modules directly. `tests/helpers/` holds a fake Lichess API and an in-memory
+stand-in for the relay's Supabase store, so the relay is testable without a
+network or a database.
 
 ---
 
@@ -54,8 +59,20 @@ micro_chess/
 ├── js/                     # JavaScript modules
 │   └── supabase_client.js
 ├── Legacy/                 # Deprecated pages
-└── supabase/               # Backend functions
+├── tests/                  # jest specs + fakes (fake Lichess, in-memory store)
+├── .env.example            # Template for server secrets (.env is gitignored)
+└── supabase/               # Backend
+    ├── migrations/         # SQL schema + RPCs
+    └── functions/
+        ├── multiplayer/    # Guest vs guest games
+        ├── stockfish/      # Cloud engine proxy
+        └── lichess/        # Relays guests into real lichess.org games
 ```
+
+### Secrets
+Server secrets (currently the Lichess relay tokens) belong in `.env` — gitignored,
+pushed to Supabase with `scripts/set-lichess-secrets.sh`. Never inline a token in
+source, never add one to a client bundle, and never commit `.env`.
 
 ---
 

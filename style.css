@@ -610,6 +610,8 @@ body {
 .clock.active { border-color: var(--primary); box-shadow: 0 0 0 2px #dcfce7; }
 .clock span { color: var(--text-gray); font-size: 13px; }
 .clock strong { font-variant-numeric: tabular-nums; font-size: 20px; }
+.lichess-seats { color: var(--text-light); font-size: 12px; text-align: center; margin: 12px 0 0; }
+.lobby-back { display: block; width: 100%; margin-top: 14px; }
 @media (max-width: 480px) { .room-join { flex-wrap: wrap; } .room-join .btn { flex: 1; } .share-room { flex-wrap: wrap; justify-content: center; } }
 
 /* ========== INDEX PAGE SPECIFIC ========== */

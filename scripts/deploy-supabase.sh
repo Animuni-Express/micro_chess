@@ -23,6 +23,17 @@ supabase db push
 echo "==> Deploying the 'multiplayer' Edge Function..."
 supabase functions deploy multiplayer --project-ref "$PROJECT_REF"
 
+echo "==> Deploying the 'lichess' Edge Function (relays guests into real Lichess games)..."
+supabase functions deploy lichess --project-ref "$PROJECT_REF"
+
+if [ -f "$ROOT/.env" ] && grep -qE '^LICHESS_(TOKENS|API_TOKEN|TOKEN)=..*' "$ROOT/.env"; then
+  echo "==> Pushing Lichess secrets from .env..."
+  bash "$ROOT/scripts/set-lichess-secrets.sh"
+else
+  echo "==> Skipping Lichess secrets: no LICHESS_TOKENS in .env."
+  echo "    'PLAY A LICHESS PLAYER' stays disabled until you add one — see DEPLOY.md."
+fi
+
 echo ""
 echo "==> Done. Open /online.html in two separate browsers to verify."
 echo "    (If 'supabase db push' cannot connect, paste"

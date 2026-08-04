@@ -52,9 +52,12 @@ export async function getSupabaseClient() {
   return client;
 }
 
-export async function multiplayer(action, payload = {}) {
+// Shared by the `multiplayer` (guest vs guest) and `lichess` (guest vs a real
+// Lichess player) Edge Functions: both take the same guest identity envelope and
+// report failures the same way.
+export async function invokeEdgeFunction(name, action, payload = {}) {
   const client = await getSupabaseClient();
-  const { data, error } = await client.functions.invoke('multiplayer', {
+  const { data, error } = await client.functions.invoke(name, {
     body: { action, ...guestIdentity(), ...payload },
   });
   if (error) {
@@ -88,6 +91,10 @@ export async function multiplayer(action, payload = {}) {
   }
   if (data?.error) throw new Error(data.error);
   return data;
+}
+
+export function multiplayer(action, payload = {}) {
+  return invokeEdgeFunction('multiplayer', action, payload);
 }
 
 export async function subscribeToGame(gameId, onUpdate) {

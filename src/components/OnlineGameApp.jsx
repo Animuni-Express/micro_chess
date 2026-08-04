@@ -3,6 +3,7 @@ import { Board } from './Board';
 import { PromotionDialog } from './PromotionDialog';
 import { createOnlineGame, movePayload } from '../core/onlineGame';
 import { multiplayer, subscribeToGame } from '../multiplayer/client';
+import { LichessGameApp } from './LichessGameApp';
 
 const TIME_CONTROLS = [
   { value: 300, label: '5 minutes' },
@@ -16,6 +17,12 @@ function formatClock(milliseconds) {
 
 function pathGameId() {
   return new URLSearchParams(window.location.search).get('game');
+}
+
+// `?lichess` (bare, or `?lichess=<gameId>` when resuming) selects the Lichess
+// relay screen instead of the guest-vs-guest lobby.
+function wantsLichess() {
+  return new URLSearchParams(window.location.search).has('lichess');
 }
 
 function setGameUrl(gameId) {
@@ -58,6 +65,7 @@ export function OnlineGameApp() {
   const [roomCode, setRoomCode] = useState('');
   const [timeControl, setTimeControl] = useState(300);
   const [queueing, setQueueing] = useState(false);
+  const [lichessMode, setLichessMode] = useState(wantsLichess);
   const unsubscribe = useRef(null);
   // Mirrors `playerColor` without becoming a dependency of refreshGame (which
   // must stay stable across polls) — lets the catch block below tell whether
@@ -289,11 +297,15 @@ export function OnlineGameApp() {
     }
   }, [game]);
 
+  if (lichessMode && !gameId) {
+    return <LichessGameApp onExit={() => setLichessMode(false)} />;
+  }
+
   if (!gameId) {
     return (
       <div className="setup-view online-lobby">
         <h2>Play Online</h2>
-        <p className="online-help">Private rooms or a quick match with another player.</p>
+        <p className="online-help">Private rooms, a quick match with another Micro Chess player, or a real opponent from the Lichess pool.</p>
         <div className="setup-option">
           <label htmlFor="time-control">TIME CONTROL</label>
           <select id="time-control" className="level-select" value={timeControl} onChange={(event) => setTimeControl(Number(event.currentTarget.value))}>
@@ -311,6 +323,9 @@ export function OnlineGameApp() {
         ) : (
           <button className="btn online-match-button" onClick={joinMatchmaking}>FIND A MATCH</button>
         )}
+        <div className="online-divider"><span>OR</span></div>
+        <button className="btn online-match-button" onClick={() => setLichessMode(true)}>PLAY A LICHESS PLAYER</button>
+        <p className="online-help">Matches you with a real player from lichess.org — anonymously, no account needed.</p>
         {message && <p className="online-message" role="status">{message}</p>}
       </div>
     );
