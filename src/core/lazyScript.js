@@ -1,7 +1,7 @@
 const loaded = new Set();
 
 // Injects a <script> tag once and resolves when it loads — used to defer
-// heavy/rarely-needed CDN scripts (Supabase SDK, local Stockfish) so they
+// heavy/rarely-needed CDN scripts (local Stockfish) so they
 // never block first paint, especially on slow Kindle connections.
 export function loadScriptOnce(src) {
   if (loaded.has(src)) return Promise.resolve();

@@ -1,0 +1,26 @@
+[build]
+  command = "bun run build"
+  publish = "dist"
+
+[build.environment]
+  BUN_VERSION = "1.4.4"
+  BUN_FLAGS = "--frozen-lockfile"
+
+[dev]
+  command = "bun run dev:netlify"
+  targetPort = 8080
+  port = 8888
+  autoLaunch = false
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[functions."cleanup"]
+  schedule = "*/10 * * * *"
+  region = "sin"
+
+[[edge_functions]]
+  path = "/api/multiplayer/*"
+  function = "multiplayer"
+

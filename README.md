@@ -21,22 +21,24 @@ Micro Chess is a testament to modern human-AI collaboration. Every line of code,
 
 - **Logic:** [chess.js](https://github.com/jhlywa/chess.js)
 - **Engine:** [Stockfish.js](https://github.com/nmrugg/stockfish.js)
-- **Backend:** [Supabase](https://supabase.com/) (Edge Functions)
-- **Frontend:** Vanilla HTML5, CSS3, and JavaScript (ESM)
+- **Multiplayer:** Netlify Edge Functions and temporary PostgreSQL rooms; binary WebRTC peer gameplay.
+- **Frontend:** Preact, HTML, CSS, and JavaScript; a separate Kindle UI built to ES5.
 - **Offline:** Service Workers & Cache API
 
 ## 📦 Getting Started
 
-Since Micro Chess is built with standard web technologies, you can run it locally without any complex setup:
+Install Bun 1.4.4 and Node 22.12+, then run:
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/Animuni-Express/micro_chess.git
-   ```
-2. Open `index.html` in any modern web browser.
-3. For the best experience, host it using a simple local server (e.g., Python `http.server` or VS Code Live Server) to enable Service Worker functionality.
+```sh
+bun install --frozen-lockfile
+bun run test
+bun run build
+bun run dev
+```
 
-Over-the-Board and Stockfish modes run entirely in the browser. **Online multiplayer** needs the Supabase backend deployed once — see [`DEPLOY.md`](DEPLOY.md). Until then, online play returns an error.
+Bun manages dependencies using `bun.lock`. The build preserves the separate Kindle ES5 bundle. Node remains the runtime for the existing test runner and Netlify tools. For local multiplayer, follow [DEPLOY.md](DEPLOY.md).
+
+Over-the-Board and Stockfish modes run entirely in the browser. **Untimed online multiplayer** uses Netlify Database and Edge Functions for matchmaking and recovery, with direct peer connections for moves — see [`DEPLOY.md`](DEPLOY.md). Until then, online play returns an error.
 
 ## 🌐 Open Source
 

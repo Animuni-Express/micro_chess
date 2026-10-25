@@ -9,23 +9,23 @@ Micro Chess is a lightweight, AI-generated chess platform with PWA support. It u
 
 ### Installation
 ```bash
-npm install
+bun install --frozen-lockfile
 ```
 
 ### Development
 ```bash
-npm run dev    # Watch mode with live reload (esbuild)
+bun run dev    # Watch mode with live reload (esbuild)
 ```
 
 ### Production Build
 ```bash
-npm run build  # Minify and bundle JS
+bun run build  # Minify and bundle JS
 # Output: public/bundle.js
 ```
 
 ### Testing
 ```bash
-npm test       # Placeholder - no real tests configured
+bun run test   # Protocol, chess, session, and PostgreSQL tests
 ```
 
 ---
@@ -52,9 +52,9 @@ micro_chess/
 │   ├── ui.ts
 │   └── config.ts
 ├── js/                     # JavaScript modules
-│   └── supabase_client.js
+│   └── (legacy helpers removed)
 ├── Legacy/                 # Deprecated pages
-└── supabase/               # Backend functions
+└── netlify/                # Edge API, scheduled cleanup and SQL migrations
 ```
 
 ---
@@ -176,7 +176,7 @@ if (game.in_draw()) { /* ... */ }
 ### Script Loading
 - Put scripts at end of body
 - Use `defer` attribute if moving to head
-- Keep CDN libs: chess.js, supabase-js, stockfish.js
+- Keep CDN libs: chess.js, stockfish.js
 
 ### Accessibility
 - Use semantic HTML (nav, main, section)
@@ -230,7 +230,7 @@ if (game.in_draw()) { /* ... */ }
 
 ### Adding a New Feature
 1. Create/modify source in appropriate file
-2. Run `npm run build` to bundle
+2. Run `bun run build` to bundle
 3. Test in browser
 4. Update service worker if caching needed
 
@@ -238,11 +238,11 @@ if (game.in_draw()) { /* ... */ }
 1. Identify the relevant HTML file
 2. Find the inline script or external JS
 3. Make fix
-4. If in public/app.js, rebuild: `npm run build`
+4. If in public/app.js, rebuild: `bun run build`
 
 ### Building for Production
 ```bash
-npm run build
+bun run build
 # Deploy public/ folder to Netlify
 ```
 

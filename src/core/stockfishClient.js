@@ -95,16 +95,6 @@ export function requestLichessMove(fen) {
     .then((data) => (data.pvs && data.pvs[0] ? data.pvs[0].moves.split(' ')[0] : null));
 }
 
-export function requestSupabaseMove(fen, depth) {
-  if (typeof window.getSupabase !== 'function') return Promise.resolve(null);
-  const supabase = window.getSupabase();
-  if (!supabase) return Promise.resolve(null);
-  return supabase.functions
-    .invoke('stockfish', { body: { fen, depth } })
-    .then((res) => (res.data && res.data.bestmove) || null)
-    .catch(() => null);
-}
-
 export function fallbackMove(game) {
   const moves = game.moves({ verbose: true });
   if (!moves.length) return null;

@@ -1,10 +1,13 @@
 node_modules/
-supabase/.temp/
 .DS_Store
 Thumbs.db
 .claude/
 output/
 
-# Accidentally-committed platform binaries (Supabase CLI, etc.)
+# Platform binaries
 *.exe
-supabase.exe
+
+.netlify/
+dist/
+.env*
+!.env.example

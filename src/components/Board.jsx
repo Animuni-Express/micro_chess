@@ -48,7 +48,7 @@ export function Board({ position, selectedSquare, validMoves, turn, inCheck, fli
               if (sq === checkSquare) classes.push('check-highlight');
 
               return (
-                <td key={sq} className={classes.join(' ')} data-square={sq} onClick={() => onSquareClick(sq)}>
+                <td key={sq} className={classes.join(' ')} data-square={sq} role="button" tabIndex="0" aria-label={sq + (piece ? ' ' + (piece.color === 'w' ? 'White ' : 'Black ') + piece.type : '')} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onSquareClick(sq); } }} onClick={() => onSquareClick(sq)}>
                   {piece && (
                     <img
                       src={pieceIcon(piece.color, piece.type)}
