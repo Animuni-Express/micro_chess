@@ -18,7 +18,6 @@
 
 [functions."cleanup"]
   schedule = "*/10 * * * *"
-  region = "sin"
 
 [[edge_functions]]
   path = "/api/multiplayer/*"
