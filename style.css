@@ -606,10 +606,6 @@ body {
 .share-room, .draw-offer { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; color: var(--text-dark); display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 12px; padding: 10px; font-size: 14px; }
 .share-room .btn, .draw-offer .btn { flex: 0 0 auto; padding: 8px 10px; }
 .draw-offer { flex-wrap: wrap; justify-content: center; margin-top: 12px; }
-.clock { align-items: center; background: #f8f9fa; border: 1px solid #e5e7eb; border-radius: 8px; display: flex; justify-content: space-between; margin: 8px auto; max-width: 448px; padding: 8px 12px; }
-.clock.active { border-color: var(--primary); box-shadow: 0 0 0 2px #dcfce7; }
-.clock span { color: var(--text-gray); font-size: 13px; }
-.clock strong { font-variant-numeric: tabular-nums; font-size: 20px; }
 @media (max-width: 480px) { .room-join { flex-wrap: wrap; } .room-join .btn { flex: 1; } .share-room { flex-wrap: wrap; justify-content: center; } }
 
 /* ========== INDEX PAGE SPECIFIC ========== */

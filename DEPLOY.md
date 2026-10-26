@@ -1,92 +1,49 @@
-# Deploying Micro Chess
+# Micro Chess multiplayer deployment
 
-Over-the-Board and Stockfish modes are 100% client-side and need **no backend**.
-**Online multiplayer** is the only feature that needs a backend. If you see
-**"Edge Function returned a non-2xx status code"**, it means the Supabase backend
-below has not been deployed yet (the tables / RPCs / Edge Function are missing).
+All application and Netlify code is JavaScript. The current frontend uses Preact and chess.js; Kindle has its own block-based UI and an ES5 bundle.
 
-The Supabase project is `ncsqidwsimmdbkoiidlz` (see `js/supabase_client.js`).
+## Local verification
 
----
+Requires Bun 1.4.4 and Node 22.12+. Bun manages dependencies and scripts; the existing Node test runner and Netlify CLI retain their Node runtime. Use `bun run test`, not Bun's separate `bun test` runner. The project-local CLI is available through `bun run netlify`.
 
-## 1. Deploy the database schema (required)
-
-This creates the `games`, `moves`, and `matchmaking_queue` tables plus the RPCs
-the Edge Function calls. There are two migration files, applied in order —
-`supabase/migrations/` is sorted by filename/timestamp automatically.
-
-### Option A — Supabase Dashboard (no CLI)
-1. Open the project → **SQL Editor** → **New query**.
-2. Paste the entire contents of
-   `supabase/migrations/20260718000000_multiplayer.sql`, then **Run**.
-3. New query again, paste
-   `supabase/migrations/20260723150000_join_by_game_id.sql`, then **Run**.
-   (Adds `join_multiplayer_game_by_id`, used when a second player opens a
-   shared invite link instead of typing the room code.)
-
-### Option B — Supabase CLI
-```bash
-supabase login
-supabase link --project-ref ncsqidwsimmdbkoiidlz
-supabase db push
+```powershell
+bun install --frozen-lockfile
+bun run test
+bun run build
+bun run netlify link --id b635821c-f4ec-44ca-94cb-a42c12c6c0fe
+bun run netlify dev --offline
+# In another terminal, while Netlify Dev is running:
+bun run netlify database migrations apply
 ```
 
----
+Open http://localhost:8888/online.html in two separate browser profiles/contexts. Create a private room in one, join its six-character code in the other. Public matchmaking uses the same connection flow. The separate contexts prevent recovery storage from being shared between the test players. A second tab of an existing game is fenced with Web Locks.
 
-## 2. Deploy the multiplayer Edge Function (required)
+`bun run test` runs protocol, chess, session and PostgreSQL integration tests with the official Netlify local database runtime. `bun run test:browser` exercises actual browser contexts against the running Netlify Dev server. Production durations are fixed in `src/multiplayer/config.js`; session tests inject shorter timings without changing shipped defaults.
 
-### Option A — Supabase CLI (recommended)
-```bash
-supabase functions deploy multiplayer --project-ref ncsqidwsimmdbkoiidlz
-```
-`SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are injected into Edge Functions
-automatically — you do **not** need to set them manually.
+## Hosting
 
-### Option B — Supabase Dashboard
-1. Project → **Edge Functions** → **Deploy a new function** → name it `multiplayer`.
-2. Paste the contents of `supabase/functions/multiplayer/index.ts`.
-3. Deploy.
+`netlify.toml` publishes only the explicit static allowlist in `dist/`. Source, migrations, credentials and local database files are excluded. Do not publish the repository root. Normal API requests use the JavaScript Edge Function at `/api/multiplayer/*`; the scheduled JavaScript Function only removes expired temporary records.
 
-Or run the helper (does both steps 1 and 2 via the CLI):
-```bash
-bash scripts/deploy-supabase.sh
-```
+Commit the SQL migration under `netlify/database/migrations/` as part of the reviewed change. Netlify applies migrations during deployment; do not apply SQL directly to a hosted database. Keep existing databases in place. New database provisioning follows the site's configured Functions region; select Singapore (`sin`) in Netlify before first provisioning when the plan permits it. The linked site currently uses Ohio (`cmh`); its plan rejects custom Function regions, so the preview uses that existing region. Singapore (`sin`) needs a plan supporting region selection before provisioning there. Existing sites/databases may have a different region, which requires a separately planned migration rather than destructive recreation.
 
----
+The configured site is `micro-chess` (`b635821c-f4ec-44ca-94cb-a42c12c6c0fe`). Building locally does not publish it. Production deployment requires an explicit release request.
 
-## 3. (Optional) Enable Realtime for instant updates
+## Connection configuration
 
-The client works with 5-second polling out of the box, so this is optional.
-For instant move delivery, enable **Realtime → Broadcast** on the project
-(on by default for new projects). If Realtime is unavailable the client silently
-falls back to polling — multiplayer still works.
+No database credentials are shipped to the browser. Netlify supplies `NETLIFY_DB_URL` at runtime. Temporary 256-bit browser tokens are hashed with SHA-256 before entering PostgreSQL; credentials use request bodies or headers rather than URLs.
 
----
+Optional Netlify Functions-scoped variables:
 
-## 4. Deploy the frontend
+- `MULTIPLAYER_STUN_URL`: STUN URL (default `stun:stun.l.google.com:19302`).
+- `MULTIPLAYER_TURN_URLS`: JSON array of TURN/TURNS URLs for an available compatible relay.
+- `MULTIPLAYER_TURN_SECRET`: relay's shared HMAC secret, kept server-side. The Edge Function issues credentials valid for ten minutes; it never sends the shared secret.
 
-The site is static. Build the bundles and deploy the repo root to any static
-host (Netlify, etc.):
-```bash
-npm install
-npm run build        # regenerates public/bundle.js and public/bundle-kindle.js
-```
-Then publish the repo root. `_redirects` is already set up for Netlify.
+A relay is needed for networks where direct WebRTC is blocked. No relay has been provisioned by this repository. Netlify hosts the rendezvous and database; it does not supply a TURN relay. Without these optional settings, only direct/STUN connectivity can be verified. Browsers lacking WebRTC, Web Crypto, IndexedDB or Web Locks show a compatibility message; old Kindle WebKit still loads the dedicated UI and retains local chess modes.
 
-> After deploying a new frontend, users may keep a cached old page until the
-> service worker updates. The SW cache version (`sw.js`, `CACHE_NAME`) is bumped
-> on each release specifically so a redeploy evicts the old cache.
+## Temporary state and lifecycle
 
----
+Rooms last at most 24 hours; unjoined rooms expire after ten minutes, abandoned connecting rooms after five. Matchmaking expires after two minutes; signaling after two minutes. Reconnect has a 90-second deadline. Cleanup runs every ten minutes. Active games produce no HTTP heartbeats, move calls or database writes. Peer health uses binary PING/PONG. After five minutes on one turn, the opponent sends a presence challenge; only intentional game interaction answers it. A deliberately interacting player can still stall an untimed game.
 
-## Verify multiplayer end-to-end
-1. Open `/online.html` in two different browsers (or one normal + one private
-   window — they need distinct `localStorage`, i.e. distinct guest identities).
-2. In the first, click **CREATE PRIVATE ROOM** and copy the 6-character code.
-3. In the second, enter the code and click **JOIN ROOM**.
-4. The game should go **active**; moves, clocks, draw offers, resign, and
-   checkmate all sync between the two. **FIND A MATCH** on both pairs them via
-   matchmaking.
+The ordered reliable `microchess` channel uses a six-byte header: protocol byte, type byte, and big-endian uint32 sequence. MOVE is 25 bytes (squares, promotion, 128-bit digest), MOVE_ACK is 22, terminal packets are seven, others six. Health packets do not depend on move sequence. Presence packets use a random challenge identifier in the sequence field. JSON is restricted to HTTP and HELLO/READY handshakes. Position digests include all six FEN fields and complete UCI history, preserving repetition state. Reconnect replays and verifies both histories and retains their longest compatible prefix; conflicting moves fail closed.
 
-If a step errors, the message now shows the **real** reason (e.g. a missing-table
-error means step 1 was skipped).
+Both participants must confirm the same terminal result before immediate deletion. A one-sided claim leaves a short-lived finishing record for fallback expiry. Cascading deletion removes seats, tokens, checkpoints, signaling and matched queue rows. Completed local IndexedDB state is removed. No accounts or permanent game archive are created.

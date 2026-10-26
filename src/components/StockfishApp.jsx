@@ -9,10 +9,8 @@ import {
   isLocalStockfishReady,
   requestChessApiMove,
   requestLichessMove,
-  requestSupabaseMove,
   fallbackMove,
 } from '../core/stockfishClient';
-import { loadScriptOnce } from '../core/lazyScript';
 
 // Full 1-20 range, matching the original desktop AI-level slider.
 const LEVELS = Array.from({ length: 20 }, (_, i) => i + 1);
@@ -73,10 +71,6 @@ export function StockfishApp() {
       request = requestChessApiMove(liveGame.fen(), aiLevel);
     } else if (engine === 'lichess') {
       request = requestLichessMove(liveGame.fen());
-    } else if (engine === 'supabase') {
-      request = loadScriptOnce('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2')
-        .then(() => loadScriptOnce('js/supabase_client.js'))
-        .then(() => requestSupabaseMove(liveGame.fen(), Math.min(aiLevel, 15)));
     } else {
       request = Promise.resolve(null);
     }
@@ -182,7 +176,6 @@ export function StockfishApp() {
             <select id="ai-engine" className="level-select" value={engine} onChange={(e) => setEngine(e.currentTarget.value)}>
               <option value="chessapi">Chess-API (Cloud)</option>
               <option value="lichess">Lichess Cloud</option>
-              <option value="supabase">Supabase Edge</option>
               <option value="local">Local Stockfish</option>
             </select>
           </div>

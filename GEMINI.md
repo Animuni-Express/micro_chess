@@ -76,9 +76,9 @@ Always include or update a short “How to run” section when you change code.
 Default commands (override these if the repo has its own):
 
 - Node.js:
-  - Install: `npm install`
-  - Run dev: `npm run dev` or `npm start`
-  - Test: `npm test`
+  - Install: `bun install --frozen-lockfile`
+  - Run dev: `bun run dev` or `bun run start`
+  - Test: `bun run test`
 
 - Python:
   - Create venv: `python -m venv .venv`
@@ -87,7 +87,7 @@ Default commands (override these if the repo has its own):
   - Test: `pytest`
 
 - Frontend-only (static site):
-  - Open `index.html` in a browser or use a simple dev server like `npx serve`.
+  - Open `index.html` in a browser or use a simple dev server like `bun x --no-install serve`.
 
 Always confirm or update these commands based on actual project files.
 

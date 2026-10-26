@@ -1,4 +1,4 @@
-const CACHE_NAME = 'micro-chess-v10';
+const CACHE_NAME = 'micro-chess-v11';
 const PRECACHE_URLS = [
   '/',
   '/index.html',
@@ -18,7 +18,6 @@ const PRECACHE_URLS = [
   '/icons/icon-maskable-512.png',
   '/public/bundle.js',
   '/public/bundle-kindle.js',
-  '/js/supabase_client.js',
   '/pieces/wp.svg',
   '/pieces/wn.svg',
   '/pieces/wb.svg',
@@ -74,7 +73,10 @@ self.addEventListener('fetch', (event) => {
   // Only handle GET requests.
   if (request.method !== 'GET') return;
 
-  // Network-first for CDN/external URLs or Supabase calls
+  // Multiplayer responses and session credentials must never enter the cache.
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/.netlify/')) return;
+
+  // Network-first for CDN/external URLs
   if (url.origin !== self.location.origin || url.pathname.startsWith('/functions/')) {
     event.respondWith(networkFirst(request));
     return;

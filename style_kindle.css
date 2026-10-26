@@ -348,28 +348,6 @@ h1 {
   margin-bottom: 8px;
 }
 
-.clock {
-  border: 2px solid #000000;
-  padding: 8px 12px;
-  margin: 8px auto;
-  max-width: 400px;
-  text-align: center;
-}
-
-.clock.active {
-  border-width: 4px;
-}
-
-.clock span {
-  display: block;
-  font-size: 14px;
-}
-
-.clock strong {
-  font-size: 22px;
-  font-variant-numeric: tabular-nums;
-}
-
 .draw-offer {
   border: 2px solid #000000;
   padding: 10px;

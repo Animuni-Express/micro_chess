@@ -1,7 +1,7 @@
 {
     "deno.enable": true,
     "deno.enablePaths": [
-        "supabase/functions"
+        "netlify/edge-functions"
     ],
     "deno.lint": true,
     "deno.unstable": true,

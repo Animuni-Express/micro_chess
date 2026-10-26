@@ -9,10 +9,8 @@ import {
   isLocalStockfishReady,
   requestChessApiMove,
   requestLichessMove,
-  requestSupabaseMove,
   fallbackMove,
 } from '../core/stockfishClient';
-import { loadScriptOnce } from '../core/lazyScript';
 
 export function KindleStockfishApp() {
   const [, forceUpdate] = useState(0);
@@ -67,10 +65,6 @@ export function KindleStockfishApp() {
       request = requestChessApiMove(game.fen(), aiLevel);
     } else if (engine === 'lichess') {
       request = requestLichessMove(game.fen());
-    } else if (engine === 'supabase') {
-      request = loadScriptOnce('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2')
-        .then(() => loadScriptOnce('js/supabase_client.js'))
-        .then(() => requestSupabaseMove(game.fen(), Math.min(aiLevel, 15)));
     } else {
       request = Promise.resolve(null);
     }
@@ -173,7 +167,6 @@ export function KindleStockfishApp() {
           <select className="level-select" value={engine} onChange={(e) => setEngine(e.target.value)}>
             <option value="chessapi">Chess-API (Cloud)</option>
             <option value="lichess">Lichess Cloud</option>
-            <option value="supabase">Supabase Edge</option>
             <option value="local">Local Stockfish</option>
           </select>
         </div>
