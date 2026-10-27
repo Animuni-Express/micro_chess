@@ -3,4 +3,5 @@ export default async () => {
   await getDatabase().sql`SELECT mc_control('cleanup','{}'::jsonb)`;
   return new Response(null, { status: 204 });
 };
-export const config = { schedule: '*/10 * * * *' };
+// Inactive database compute is billed: avoid frequent wake-ups during idle periods.
+export const config = { schedule: '0 0 * * 0' };

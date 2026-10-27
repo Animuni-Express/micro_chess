@@ -16,8 +16,9 @@
   directory = "netlify/functions"
   node_bundler = "esbuild"
 
+# Idle database cost: run cleanup once weekly on Sunday at 00:00 UTC.
 [functions."cleanup"]
-  schedule = "*/10 * * * *"
+  schedule = "0 0 * * 0"
 
 [[edge_functions]]
   path = "/api/multiplayer/*"
