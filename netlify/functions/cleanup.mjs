@@ -4,4 +4,4 @@ export default async () => {
   return new Response(null, { status: 204 });
 };
 // Inactive database compute is billed: avoid frequent wake-ups during idle periods.
-export const config = { schedule: '0 */6 * * *' };
+export const config = { schedule: '0 0 * * 0' };
